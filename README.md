@@ -1,19 +1,19 @@
-# Bob
+# `bob-bot`
 
-A Discord bot for creating and destroying temporary voice channels.
+A Discord bot for creating and destroying **temporary voice channels**.
 
 > _Ever wanted [Mumble](https://www.mumble.info/)'s temporary voice channels on Discord?_  
 > _Bob can help you!_
 
 ## About
 
-Bob is a bot that allows a group of users to create **voice channels that are automatically deleted after everybody leaves**.
+Bob is a bot that allows a group of users to create voice channels that are automatically deleted after everybody leaves.
 
 ## Usage
 
 While you are connected to any voice channel:
 
-- `!build <channel-name>`  | **create a new temporary channel** and enter it
+- `!build <channel-name>` | **create a new temporary channel** and enter it
 
 ## Add to your server
 

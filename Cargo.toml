@@ -1,11 +1,11 @@
 [package]
-name = "bob"
+name = "bob-bot"
 version = "0.1.0"
 authors = ["Stefano Pigozzi <ste.pigozzi@gmail.com>"]
 edition = "2018"
 description = "A Discord bot for creating and destroying temporary voice channels"
 readme = "README.md"
-repository = "https://github.com/Steffo99/bob"
+repository = "https://github.com/Steffo99/bob-bot"
 license = "AGPL-3.0-or-later"
 keywords = ["discord", "discord-bot"]
 categories = ["command-line-utilities"]
