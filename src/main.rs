@@ -88,10 +88,10 @@ impl EventHandler for BobHandler {
 fn error(ctx: &mut Context, msg: &Message, error: DispatchError) {
     match error {
         DispatchError::OnlyForGuilds => {
-            let _ = msg.reply(&ctx.http, "This command can only be sent in a guild.");
+            let _ = msg.reply(&ctx.http, "⚠️ This command can only be sent in a guild.");
         }
         _ => {
-            let _ = msg.reply(&ctx.http, "Unmatched error occoured.");
+            let _ = msg.reply(&ctx.http, "⛔️ Unmatched error occoured! Please report this at <https://github.com/Steffo99/bob>.");
         }
     }
 }
@@ -120,7 +120,7 @@ fn build(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
         c
     }
     )?;
-    msg.reply(&ctx.http, format!("Channel <#{}> was built.", &created.id))?;
+    msg.reply(&ctx.http, format!("✅ Built channel <#{}>!", &created.id))?;
 
     Ok(())
 }
