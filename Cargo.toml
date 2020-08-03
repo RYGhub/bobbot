@@ -1,14 +1,21 @@
 [package]
-name = "bob"
+name = "bob-bot"
 version = "0.1.0"
 authors = ["Stefano Pigozzi <ste.pigozzi@gmail.com>"]
 edition = "2018"
+description = "A Discord bot for creating and destroying temporary voice channels"
+readme = "README.md"
+repository = "https://github.com/Steffo99/bob-bot"
+license = "AGPL-3.0-or-later"
+keywords = ["discord", "discord-bot"]
+categories = ["command-line-utilities"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[badges]
+maintenance = {status = "actively-developed"}
 
 [dependencies]
 
-[dependencies."serenity"]
+[dependencies.serenity]
 version = "0.8.6"
 features = [
     "cache",
@@ -16,14 +23,14 @@ features = [
     "standard_framework"
 ]
 
-[dependencies."lazy_static"]
+[dependencies.lazy_static]
 version = "1.4.0"
 
-[dependencies."regex"]
+[dependencies.regex]
 version = "1.3.9"
 
-[dependencies."log"]
+[dependencies.log]
 version = "0.4.11"
 
-[dependencies."pretty_env_logger"]
+[dependencies.pretty_env_logger]
 version = "0.4.0"
