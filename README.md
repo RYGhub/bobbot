@@ -14,6 +14,8 @@ Bob is a bot that allows a group of users to create voice channels that are auto
 While you are connected to any voice channel:
 
 - `!build <channel-name>` | **create a new temporary channel** and enter it
+- `!save <preset-name>` | **save the permissions** of the channel you currently are in to a name
+- `!load <preset-name> <channel-name>` | **load the permissions** with the name
 
 ## Add to your server
 
