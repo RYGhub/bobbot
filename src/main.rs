@@ -2,6 +2,8 @@
 extern crate log;
 
 use std::env;
+use std::fs;
+use std::io;
 use std::result;
 use serenity::Client;
 use serenity::prelude::*;
@@ -11,11 +13,15 @@ use serenity::framework::standard::*;
 use serenity::framework::standard::macros::*;
 use regex::Regex;
 use once_cell::sync::Lazy;
+use serde;
+use toml;
+use std::io::Write;
 
 struct BobHandler;
 
 #[group]
 #[commands(build)]
+#[commands(save)]
 struct Bob;
 
 
@@ -191,6 +197,11 @@ fn check_ensure_connected_to_voice(ctx: &mut Context, msg: &Message, _args: &mut
         return CheckResult::new_user("You must be connected to a voice channel in order to run this command.");
     }
 
+    let author_voice_state = author_voice_state.unwrap();
+    if author_voice_state.channel_id.is_none() {
+        return CheckResult::new_user("You must be connected to a voice channel in order to run this command.");
+    }
+
     CheckResult::Success
 }
 
@@ -242,6 +253,54 @@ fn build(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 
     guild.move_member(&ctx.http, &msg.author.id, &created.id)?;
     debug!("Moved command caller to the created channel");
+
+    Ok(())
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
+struct PermissionOverwritesContainer {
+    permissions: Vec<PermissionOverwrite>
+}
+
+
+/// Save the permissions to a file.
+#[command]
+#[only_in(guilds)]
+#[checks(MatchChannelName)]
+#[checks(EnsureCategory)]
+#[checks(EnsureConnectedToVoice)]
+fn save(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
+    debug!("Running command: !save");
+
+    let guild = msg.guild(&ctx.cache).unwrap();
+    let guild = guild.read();
+    let channel = msg.channel(&ctx.cache).unwrap().guild().unwrap();
+    let channel = channel.read();
+    let category = channel.category_id.unwrap().to_channel(&ctx.http).unwrap().category().unwrap();
+    let category = category.read();
+    let author_voice_state = guild.voice_states.get(&msg.author.id).unwrap();
+
+    let preset_name = sanitize_channel_name(args.rest());
+
+    let author_voice_channel = author_voice_state.channel_id.unwrap();
+    let author_voice_channel = author_voice_channel.to_channel(&ctx.http)?;
+    let author_voice_channel = author_voice_channel.guild().unwrap();
+    let author_voice_channel = author_voice_channel.read();
+
+    let permission_overwrites = &author_voice_channel.permission_overwrites;
+    let serialized_overwrites = toml::to_string(&PermissionOverwritesContainer{permissions: permission_overwrites.clone()}).expect("Failed to convert permission overwrites to JSON");
+    let serialized_overwrites = serialized_overwrites.into_bytes();
+
+    let current_path = env::current_dir().expect("Could not get current working directory");
+    let presets_dir = current_path.join("presets");
+    let _ = fs::create_dir(&presets_dir);
+    let guild_dir = presets_dir.join(format!("{}", guild.id));
+    let _ = fs::create_dir(&guild_dir);
+    let preset_path = guild_dir.join(format!("{}.toml", &preset_name));
+    let mut preset_file = fs::File::create(&preset_path).expect("Could not create preset file");
+    preset_file.write_all(&serialized_overwrites);
+
+    msg.channel_id.say(&ctx.http, format!("📁 Saved permissions of <#{}> to preset `{}`.", &channel.id, &preset_name))?;
 
     Ok(())
 }

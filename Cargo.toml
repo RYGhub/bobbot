@@ -1,6 +1,6 @@
 [package]
 name = "bobbot"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Stefano Pigozzi <ste.pigozzi@gmail.com>"]
 edition = "2018"
 description = "A Discord bot for creating and destroying temporary voice channels"
@@ -34,3 +34,9 @@ version = "0.4.11"
 
 [dependencies.pretty_env_logger]
 version = "0.4.0"
+
+[dependencies.toml]
+version = "0.5.6"
+
+[dependencies.serde]
+version = "1.0.115"
