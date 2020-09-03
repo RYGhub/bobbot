@@ -1,6 +1,6 @@
 [package]
-name = "bob-bot"
-version = "0.1.0"
+name = "bobbot"
+version = "0.2.0"
 authors = ["Stefano Pigozzi <ste.pigozzi@gmail.com>"]
 edition = "2018"
 description = "A Discord bot for creating and destroying temporary voice channels"
@@ -23,8 +23,8 @@ features = [
     "standard_framework"
 ]
 
-[dependencies.lazy_static]
-version = "1.4.0"
+[dependencies.once_cell]
+version = "1.4.1"
 
 [dependencies.regex]
 version = "1.3.9"

@@ -1,6 +1,4 @@
 #[macro_use]
-extern crate lazy_static;
-#[macro_use]
 extern crate log;
 
 use std::env;
@@ -12,6 +10,7 @@ use serenity::framework::StandardFramework;
 use serenity::framework::standard::*;
 use serenity::framework::standard::macros::*;
 use regex::Regex;
+use once_cell::sync::Lazy;
 
 struct BobHandler;
 
@@ -58,9 +57,11 @@ impl EventHandler for BobHandler {
     // https://github.com/intellij-rust/intellij-rust/issues/1191
     // noinspection RsTraitImplementation
     fn voice_state_update(&self, ctx: Context, guild_id: Option<GuildId>, old: Option<VoiceState>, new: VoiceState) {
-        match handle_voice_state_update(ctx, guild_id, old, new) {
+        debug!("Received a voice state update");
+
+        match delete_left_temp_channel(ctx, guild_id, old, new) {
             Err(s) => {
-                debug!("Skipping channel deletion: {}", s);
+                debug!("Not deleting: {}", s);
             }
             _ => (),
         }
@@ -73,20 +74,36 @@ fn error(ctx: &mut Context, msg: &Message, error: DispatchError) {
     match error {
         DispatchError::OnlyForGuilds => {
             debug!("Rejecting command sent outside of a guild");
-            let _ = msg.reply(&ctx.http, "This command only works in a guild.");
+            let _ = msg.channel_id.say(&ctx.http, "⚠️ This command only works in a guild.");
+        }
+        DispatchError::CheckFailed(check, reason) => {
+            match reason {
+                Reason::Log(l) => {
+                    error!("Check {} failed: {}", &check, &l);
+                },
+                Reason::User(u) => {
+                    debug!("Check {} failed", &check);
+                    let _ = msg.channel_id.say(&ctx.http, format!("⚠️ {}", &u));
+                },
+                Reason::UserAndLog {user: u, log: l} => {
+                    error!("Check {} failed: {}", &check, &l);
+                    let _ = msg.channel_id.say(&ctx.http, format!("⚠️ {}", &u));
+                }
+                _ => {
+                    error!("Check {} failed for an unknown reason.", &check);
+                }
+            }
         }
         _ => {
             warn!("Unmatched error occoured!");
-            let _ = msg.reply(&ctx.http, "Unmatched error occoured.");
+            let _ = msg.channel_id.say(&ctx.http, "☢️ An unhandled error just occoured! It has been logged to the console.");
         }
     }
 }
 
 /// Convert a string to **kebab-case**.
 fn sanitize_channel_name(s: &str) -> String {
-    lazy_static! {
-        static ref REPLACE_PATTERN: Regex = Regex::new("[^a-z0-9]").unwrap();
-    }
+    static REPLACE_PATTERN: Lazy<Regex> = Lazy::new(|| {Regex::new("[^a-z0-9]").unwrap()});
 
     let mut last = s.len();
     if last > 100 {
@@ -95,7 +112,7 @@ fn sanitize_channel_name(s: &str) -> String {
 
     let s = &s[..last];
     let s = s.to_ascii_lowercase();
-    let s: String = REPLACE_PATTERN.replace_all(&s, " ").into_owned();
+    let s: String = (*REPLACE_PATTERN).replace_all(&s, " ").into_owned();
     let s = s.trim();
     let s = s.replace(" ", "-");
 
@@ -103,137 +120,180 @@ fn sanitize_channel_name(s: &str) -> String {
     s
 }
 
+#[check]
+#[name = "MatchChannelName"]
+fn check_match_channel_name(ctx: &mut Context, msg: &Message, _args: &mut Args) -> CheckResult {
+    static BOB_CHANNEL_NAME: Lazy<String> = Lazy::new(|| {env::var("BOB_CHANNEL_NAME").expect("Missing BOB_CHANNEL_NAME envvar.")});
 
+    let channel = msg.channel(&ctx.cache);
+    if channel.is_none() {
+        return CheckResult::new_log("Could not fetch bot channel info from the Discord API.");
+    }
+
+    let channel = channel.unwrap();
+    let channel = channel.guild();
+    if channel.is_none() {
+        return CheckResult::new_user("This channel isn't inside a server.");
+    }
+
+    let channel = channel.unwrap();
+    let channel = channel.read();
+    if channel.name != *BOB_CHANNEL_NAME {
+        return CheckResult::new_user(format!("This channel isn't named #{}, so commands won't run here.", &*BOB_CHANNEL_NAME));
+    }
+
+    CheckResult::Success
+}
+
+
+#[check]
+#[name = "EnsureCategory"]
+fn check_ensure_category(ctx: &mut Context, msg: &Message, _args: &mut Args) -> CheckResult {
+    let channel = msg.channel(&ctx.cache);
+    if channel.is_none() {
+        return CheckResult::new_log("Could not fetch bot channel info from the Discord API.");
+    }
+
+    let channel = channel.unwrap();
+    let channel = channel.guild();
+    if channel.is_none() {
+        return CheckResult::new_user("This channel isn't inside a server.");
+    }
+
+    let channel = channel.unwrap();
+    let channel = channel.read();
+    if channel.category_id.is_none() {
+        return CheckResult::new_user("This channel isn't inside a category.");
+    }
+
+    let category = channel.category_id.unwrap().to_channel(&ctx.http);
+    if category.is_err() {
+        return CheckResult::new_log("Could not fetch bot category info from the Discord API");
+    }
+
+    CheckResult::Success
+}
+
+
+#[check]
+#[name = "EnsureConnectedToVoice"]
+fn check_ensure_connected_to_voice(ctx: &mut Context, msg: &Message, _args: &mut Args) -> CheckResult {
+    let guild = msg.guild(&ctx.cache);
+    if guild.is_none() {
+        return CheckResult::new_log("Could not fetch guild info from the Discord API.");
+    }
+
+    let guild = guild.unwrap();
+    let guild = guild.read();
+
+    let author_voice_state = guild.voice_states.get(&msg.author.id);
+    if author_voice_state.is_none() {
+        return CheckResult::new_user("You must be connected to a voice channel in order to run this command.");
+    }
+
+    CheckResult::Success
+}
+
+
+/// Build a new temporary channel.
 #[command]
 #[only_in(guilds)]
-/// Build a new temporary channel.
-fn build(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
-    let guild = &msg.guild(&ctx.cache).expect("Could not fetch guild info.");
+#[checks(MatchChannelName)]
+#[checks(EnsureCategory)]
+#[checks(EnsureConnectedToVoice)]
+fn build(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
+    debug!("Running command: !build");
+
+    let guild = msg.guild(&ctx.cache).unwrap();
     let guild = guild.read();
-    debug!("Build called in guild: {}", &guild.name);
-
-    let channel = &msg
-        .channel(&ctx.cache).expect("Could not fetch channel info.")
-        .guild().unwrap();
+    let channel = msg.channel(&ctx.cache).unwrap().guild().unwrap();
     let channel = channel.read();
-    debug!("Build called in channel: {}", &channel.name);
-
-    let bob_channel_name = env::var("BOB_CHANNEL_NAME").unwrap();
-    if channel.name != bob_channel_name {
-        info!("Refusing to build for a command called in a channel with a name that doesn't match: {}", bob_channel_name);
-        &msg.reply(&ctx.http, "Bob cannot run in this channel.")?;
-        return Ok(());
-    }
-
-    let category_id = match channel.category_id {
-        None => {
-            error!("Bob channel is not in a category!");
-            msg.reply(&ctx.http, "This channel is not in a category!")?;
-            return Ok(());
-        },
-        Some(category_id) => category_id,
-    };
-    let category = category_id.to_channel(&ctx.http).expect("Could not fetch category info.").category().unwrap();
+    let category = channel.category_id.unwrap().to_channel(&ctx.http).unwrap().category().unwrap();
     let category = category.read();
-    debug!("Build called from category: {}", &category.name);
 
-    let author = &msg.author;
-    debug!("Build called from author: {}#{}", &author.name, &author.discriminator);
-
-    let author_voice_state = guild.voice_states.get(&author.id);
-    debug!("Build called from voice_state: {:?}", &author_voice_state);
-
-    if author_voice_state.is_none() {
-        info!("Refusing to build for someone not in a voice channel");
-        &msg.reply(&ctx.http, "You must be connected to a voice channel in order to build a new temp channel.")?;
-        return Ok(());
-    }
-
-    let arg_channel_name = args.single_quoted::<String>()?;
-    let channel_name = sanitize_channel_name(arg_channel_name.as_ref());
+    let new_channel_name = sanitize_channel_name(args.rest());
 
     channel.broadcast_typing(&ctx.http)?;
     debug!("Started typing");
 
     let created = guild.create_channel(&ctx.http, |c| {
-        debug!("Channel name will be: {}", &channel_name);
-        c.name(channel_name);
+        debug!("Temp channel name will be: {}", &new_channel_name);
+        c.name(new_channel_name);
 
-        debug!("Channel type will be: Voice");
+        debug!("Temp channel type will be: Voice");
         c.kind(ChannelType::Voice);
 
-        debug!("Channel category will be: {}", &category_id);
-        c.category(&category_id);
+        debug!("Temp channel category will be: {}", &channel.category_id.unwrap());
+        c.category(&channel.category_id.unwrap());
 
-        debug!("Channel permissions will be cloned from the category");
+        debug!("Temp channel permissions will be cloned from the category");
         let mut permissions = category.permission_overwrites.clone();
         permissions.push(PermissionOverwrite{
             allow: Permissions::all(),
             deny: Permissions::empty(),
-            kind: PermissionOverwriteType::Member(author.id)
+            kind: PermissionOverwriteType::Member(msg.author.id.clone())
         });
         c.permissions(permissions)
     })?;
-    info!("Created channel #{}", &created.name);
+    info!("Created temp channel #{}", &created.name);
 
-    msg.reply(&ctx.http, format!("Temp channel <#{}> was built.", &created.id))?;
+    msg.channel_id.say(&ctx.http, format!("🔨 Temp channel <#{}> was built.", &created.id))?;
     debug!("Sent channel created message");
 
-    guild.move_member(&ctx.http, &author.id, &created.id)?;
+    guild.move_member(&ctx.http, &msg.author.id, &created.id)?;
     debug!("Moved command caller to the created channel");
 
     Ok(())
 }
 
 /// Check whether an user left a channel and delete temp channels.
-fn handle_voice_state_update(ctx: Context, guild_id: Option<GuildId>, old: Option<VoiceState>, new: VoiceState) -> result::Result<(), &'static str> {
-    debug!("Handling voice_state_update");
+fn delete_left_temp_channel(ctx: Context, guild: Option<GuildId>, old: Option<VoiceState>, new: VoiceState) -> result::Result<(), &'static str> {
+    let guild = guild.ok_or("Unknown guild_id")?;
+    let guild: PartialGuild = guild.to_partial_guild(&ctx.http).or(Err("Could not fetch guild data"))?;
 
-    let guild_id = guild_id.ok_or("guild_id isn't available")?;
-    let guild: PartialGuild = guild_id
-        .to_partial_guild(&ctx.http).or(Err("Could not fetch guild data"))?;
+    let old = old.ok_or("User just joined voice chat")?;
+    let old_channel = &old.channel_id.ok_or("User was in an unknown channel")?;
 
-    let old = old.ok_or("Old voice state isn't available")?;
-
-    if let None = old.channel_id {
-        return Err("User just connected to voice");
-    }
-    let old_channel_id = old.channel_id.unwrap();
-
-    if let Some(new_channel_id) = new.channel_id {
-        if old_channel_id == new_channel_id {
-            return Err("Old channel is the same as the new one");
+    if let Some(new_channel) = &new.channel_id {
+        if old_channel == new_channel {
+            return Err("User left and rejoined the same channel");
         }
     }
 
-    let old_channel = old_channel_id
+    let old_channel = old_channel
         .to_channel(&ctx.http).or(Err("Could not fetch channel data"))?
-        .guild().unwrap();
+        .guild().ok_or("Channel was not in a guild")?;
     let old_channel = old_channel.read();
+    let old_channel_category_id = &old_channel.category_id.ok_or("Previous channel isn't in any category")?;
 
-    let members: Vec<Member> = old_channel.members(&ctx.cache).or(Err("Failed to get members of the channel"))?;
+    let members: Vec<Member> = old_channel.members(&ctx.cache).or(Err("Could not fetch channel members"))?;
 
     if members.len() != 0 {
-        return Err("There still are members in the channel");
+        return Err("Channel isn't empty");
     }
 
-    let mut bob_category_id : Option<ChannelId> = None;
-    let bob_channel_name = env::var("BOB_CHANNEL_NAME").unwrap();
-    let all_channels = guild.channels(&ctx.http).or(Err("Could not fetch all guild channels data"))?;
+    static BOB_CHANNEL_NAME: Lazy<String> = Lazy::new(|| {env::var("BOB_CHANNEL_NAME").expect("Missing BOB_CHANNEL_NAME envvar.")});
+
+    // Find the bob channel category
+    let mut bob_channel: Option<&GuildChannel> = None;
+    let all_channels = guild.channels(&ctx.http).or(Err("Could not fetch guild channels"))?;
     for c in all_channels.values() {
-        if c.name == bob_channel_name {
-            let category_id = c.category_id;
-            bob_category_id = Some(category_id.ok_or("category_id isn't available")?);
+        if c.name == (*BOB_CHANNEL_NAME) {
+            bob_channel = Some(c);
+            break;
         }
     }
+    let bob_channel = bob_channel.ok_or("No bob channel found")?;
+    let bob_category_id = &bob_channel.category_id.ok_or("No bob category found")?;
 
-    bob_category_id.ok_or("Could not find the bob_category_id")?;
-
-    if old_channel.category_id != bob_category_id {
-        return Err("Channel isn't a temp channel");
+    if old_channel_category_id != bob_category_id {
+        return Err("Channel isn't in the bob category");
     }
 
-    old_channel.delete(&ctx.http).or(Err("Couldn't delete channel"))?;
+    let _ = bob_channel.say(&ctx.http, format!("🗑 Temp channel <#{}> was deleted, as it was empty.", &old_channel.id));
+
+    info!("Deleting #{}", &old_channel.name);
+    old_channel.delete(&ctx.http).or(Err("Failed to delete channel"))?;
 
     Ok(())
 }
