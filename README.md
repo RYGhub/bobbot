@@ -1,4 +1,4 @@
-# `bob-bot`
+# `bobbot`
 
 A Discord bot for creating and destroying **temporary voice channels**.
 
