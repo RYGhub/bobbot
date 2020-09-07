@@ -4,9 +4,9 @@ pub mod load;
 
 use serenity::framework::standard::macros::*;
 
-use crate::commands::bob::build::BUILD_COMMAND;
-use crate::commands::bob::save::SAVE_COMMAND;
-use crate::commands::bob::load::LOAD_COMMAND;
+use crate::commands::bob::build::*;
+use crate::commands::bob::save::*;
+use crate::commands::bob::load::*;
 
 #[group]
 #[commands(build, save, load)]

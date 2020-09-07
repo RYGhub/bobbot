@@ -7,12 +7,9 @@ use serenity::model::prelude::*;
 use serenity::framework::standard::*;
 use serenity::framework::standard::macros::*;
 
-#[allow(unused_imports)]
-use crate::checks::sent_in_bob::SENTINBOB_CHECK;
-#[allow(unused_imports)]
-use crate::checks::bob_has_category::BOBHASCATEGORY_CHECK;
-#[allow(unused_imports)]
-use crate::checks::author_connected_to_voice::AUTHORCONNECTEDTOVOICE_CHECK;
+use crate::checks::sent_in_bob::*;
+use crate::checks::bob_has_category::*;
+use crate::checks::author_connected_to_voice::*;
 
 use crate::utils::{kebabify, PermissionOverwritesContainer};
 
@@ -20,9 +17,7 @@ use crate::utils::{kebabify, PermissionOverwritesContainer};
 /// Save the permissions to a file.
 #[command]
 #[only_in(guilds)]
-#[checks(SentInBob)]
-#[checks(BobHasCategory)]
-#[checks(AuthorConnectedToVoice)]
+#[checks(SentInBob, BobHasCategory, AuthorConnectedToVoice)]
 pub fn save(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     debug!("Running command: !save");
 
