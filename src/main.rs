@@ -85,10 +85,10 @@ fn clear_empty_temp_channel(ctx: Context, guild: Option<GuildId>, old: Option<Vo
         return Err("Channel isn't in the bob category");
     }
 
-    let _ = bob_channel.say(&ctx.http, format!("🗑 Temp channel <#{}> was deleted, as it was empty.", &old_channel.id));
-
     info!("Deleting #{}", &old_channel.name);
     old_channel.delete(&ctx.http).or(Err("Failed to delete channel"))?;
+
+    let _ = bob_channel.say(&ctx.http, format!("🗑 Temp channel <#{}> was deleted, as it was empty.", &old_channel.id));
 
     Ok(())
 }
