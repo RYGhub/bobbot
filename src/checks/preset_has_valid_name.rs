@@ -1,5 +1,3 @@
-use std::env;
-
 use serenity::prelude::*;
 use serenity::model::prelude::*;
 use serenity::framework::standard::*;

@@ -8,6 +8,7 @@ use crate::checks::bob_has_category::*;
 use crate::checks::author_connected_to_voice::*;
 
 use crate::utils::kebabify;
+use crate::utils::create_temp_channel::create_temp_channel;
 
 
 /// Build a new temporary channel.
@@ -26,35 +27,27 @@ pub fn build(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 
     let new_channel_name = kebabify(args.rest());
 
+    debug!("Starting to type");
     channel.broadcast_typing(&ctx.http)?;
-    debug!("Started typing");
 
-    let created = guild.create_channel(&ctx.http, |c| {
-        debug!("Temp channel name will be: {}", &new_channel_name);
-        c.name(new_channel_name);
+    debug!("Cloning channel permissions from the bob category");
+    let mut permissions = category.permission_overwrites.clone();
+    permissions.push(PermissionOverwrite{
+        allow: Permissions::all(),
+        deny: Permissions::empty(),
+        kind: PermissionOverwriteType::Member(msg.author.id.clone())
+    });
 
-        debug!("Temp channel type will be: Voice");
-        c.kind(ChannelType::Voice);
+    debug!("Creating temp channel");
+    let created = create_temp_channel(ctx, &guild, &category.id, &new_channel_name, permissions)?;
 
-        debug!("Temp channel category will be: {}", &channel.category_id.unwrap());
-        c.category(&channel.category_id.unwrap());
-
-        debug!("Temp channel permissions will be cloned from the category");
-        let mut permissions = category.permission_overwrites.clone();
-        permissions.push(PermissionOverwrite{
-            allow: Permissions::all(),
-            deny: Permissions::empty(),
-            kind: PermissionOverwriteType::Member(msg.author.id.clone())
-        });
-        c.permissions(permissions)
-    })?;
-    info!("Created temp channel #{}", &created.name);
-
+    debug!("Sending channel created message");
     msg.channel_id.say(&ctx.http, format!("🔨 Temp channel <#{}> was built.", &created.id))?;
-    debug!("Sent channel created message");
 
+    debug!("Moving command caller to the created channel");
     guild.move_member(&ctx.http, &msg.author.id, &created.id)?;
-    debug!("Moved command caller to the created channel");
+
+    debug!("Build command executed successfully!");
 
     Ok(())
 }
