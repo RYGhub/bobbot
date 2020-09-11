@@ -13,4 +13,6 @@ pub fn check_preset_exists(_ctx: &mut Context, _msg: &Message, args: &mut Args) 
     if preset_name.is_none() {
         return CheckResult::new_user("You didn't specify the name to save the preset to.")
     }
+
+    CheckResult::Success
 }
