@@ -10,6 +10,7 @@ use serenity::framework::standard::macros::*;
 use crate::checks::sent_in_bob::*;
 use crate::checks::bob_has_category::*;
 use crate::checks::author_connected_to_voice::*;
+use crate::checks::preset_has_valid_name::*;
 
 use crate::utils::{kebabify, PermissionOverwritesContainer};
 
