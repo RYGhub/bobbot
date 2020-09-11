@@ -17,7 +17,7 @@ use crate::utils::{kebabify, PermissionOverwritesContainer};
 /// Save the permissions to a file.
 #[command]
 #[only_in(guilds)]
-#[checks(SentInBob, BobHasCategory, AuthorConnectedToVoice)]
+#[checks(SentInBob, BobHasCategory, AuthorConnectedToVoice, PresetHasValidName)]
 pub fn save(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     debug!("Running command: !save");
 
