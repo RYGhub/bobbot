@@ -1,4 +1,5 @@
 pub mod create_temp_channel;
+pub mod clear_temp_channel;
 
 use once_cell::sync::Lazy;
 use regex::Regex;
