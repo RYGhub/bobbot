@@ -20,21 +20,18 @@ use crate::utils::create_temp_channel::create_temp_channel;
 #[command]
 #[only_in(guilds)]
 #[checks(SentInBob, BobHasCategory, AuthorConnectedToVoice, PresetExists)]
-pub fn load(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
+pub async fn load(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     debug!("Running command: !load");
 
-    let guild = msg.guild(&ctx.cache).unwrap();
-    let guild = guild.read();
-    let channel = msg.channel(&ctx.cache).unwrap().guild().unwrap();
-    let channel = channel.read();
-    let category = channel.category_id.unwrap().to_channel(&ctx.http).unwrap().category().unwrap();
-    let category = category.read();
+    let guild = msg.guild(&ctx.cache).await.unwrap();
+    let channel = msg.channel(&ctx.cache).await.unwrap().guild().unwrap();
+    let category = channel.category_id.unwrap().to_channel(&ctx.http).await.unwrap().category().unwrap();
 
     let preset_name: String = args.single()?;
     let new_channel_name = kebabify(args.rest());
 
     debug!("Starting to type");
-    channel.broadcast_typing(&ctx.http)?;
+    channel.broadcast_typing(&ctx.http).await?;
 
     debug!("Temp channel permissions will be loaded from the preset {}", &preset_name);
     let current_path = env::current_dir().expect("Could not get current working directory");
@@ -48,13 +45,13 @@ pub fn load(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     let permission_overwrites: PermissionOverwritesContainer = toml::from_str(&*serialized_overwrites).expect(&*format!("Could not parse file for preset {}", &preset_name));
 
     debug!("Creating temp channel");
-    let created = create_temp_channel(ctx, &guild, &category.id, &new_channel_name, permission_overwrites.permissions.clone())?;
+    let created = create_temp_channel(ctx, &guild, &category.id, &new_channel_name, permission_overwrites.permissions.clone()).await?;
 
     debug!("Sending channel created message");
-    msg.channel_id.say(&ctx.http, format!("🔨 Temp channel <#{}> was built with permissions from the preset `{}`.", &created.id, &preset_name))?;
+    msg.channel_id.say(&ctx.http, format!("🔨 Temp channel <#{}> was built with permissions from the preset `{}`.", &created.id, &preset_name)).await?;
 
     debug!("Moving command caller to the created channel");
-    guild.move_member(&ctx.http, &msg.author.id, &created.id)?;
+    guild.move_member(&ctx.http, &msg.author.id, &created.id).await?;
 
     debug!("Build command executed successfully!");
 

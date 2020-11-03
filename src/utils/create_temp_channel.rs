@@ -4,7 +4,7 @@ use serenity::prelude::*;
 use serenity::model::prelude::*;
 use serenity::framework::standard::*;
 
-pub fn create_temp_channel<S, I>(ctx: &mut Context, guild: &Guild, category_id: &ChannelId, name: S, permissions: I) -> std::result::Result<GuildChannel, CommandError>
+pub async fn create_temp_channel<S, I>(ctx: &Context, guild: &Guild, category_id: &ChannelId, name: S, permissions: I) -> std::result::Result<GuildChannel, CommandError>
     where S: Display, I: IntoIterator<Item=PermissionOverwrite>
 {
     let created = guild.create_channel(&ctx.http, |c| {
@@ -19,7 +19,7 @@ pub fn create_temp_channel<S, I>(ctx: &mut Context, guild: &Guild, category_id: 
 
         debug!("Temp channel permissions will use the ones moved here as a parameter");
         c.permissions(permissions)
-    })?;
+    }).await?;
     info!("Created temp channel #{}", &created.name);
 
     Ok(created)

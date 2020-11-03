@@ -15,20 +15,17 @@ use crate::utils::create_temp_channel::create_temp_channel;
 #[command]
 #[only_in(guilds)]
 #[checks(SentInBob, BobHasCategory, AuthorConnectedToVoice)]
-pub fn build(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
+pub async fn build(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     debug!("Running command: !build");
 
-    let guild = msg.guild(&ctx.cache).unwrap();
-    let guild = guild.read();
-    let channel = msg.channel(&ctx.cache).unwrap().guild().unwrap();
-    let channel = channel.read();
-    let category = channel.category_id.unwrap().to_channel(&ctx.http).unwrap().category().unwrap();
-    let category = category.read();
+    let guild = msg.guild(&ctx.cache).await.unwrap();
+    let channel = msg.channel(&ctx.cache).await.unwrap().guild().unwrap();
+    let category = channel.category_id.unwrap().to_channel(&ctx.http).await.unwrap().category().unwrap();
 
     let new_channel_name = kebabify(args.rest());
 
     debug!("Starting to type");
-    channel.broadcast_typing(&ctx.http)?;
+    channel.broadcast_typing(&ctx.http).await?;
 
     debug!("Cloning channel permissions from the bob category");
     let mut permissions = category.permission_overwrites.clone();
@@ -39,13 +36,13 @@ pub fn build(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     });
 
     debug!("Creating temp channel");
-    let created = create_temp_channel(ctx, &guild, &category.id, &new_channel_name, permissions)?;
+    let created = create_temp_channel(&ctx, &guild, &category.id, &new_channel_name, permissions).await?;
 
     debug!("Sending channel created message");
-    msg.channel_id.say(&ctx.http, format!("🔨 Temp channel <#{}> was built.", &created.id))?;
+    msg.channel_id.say(&ctx.http, format!("🔨 Temp channel <#{}> was built.", &created.id)).await?;
 
     debug!("Moving command caller to the created channel");
-    guild.move_member(&ctx.http, &msg.author.id, &created.id)?;
+    guild.move_member(&ctx.http, &msg.author.id, &created.id).await?;
 
     debug!("Build command executed successfully!");
 

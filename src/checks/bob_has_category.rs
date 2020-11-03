@@ -6,8 +6,8 @@ use serenity::framework::standard::macros::*;
 
 #[check]
 #[name = "BobHasCategory"]
-pub fn check_bob_has_category(ctx: &mut Context, msg: &Message, _args: &mut Args) -> CheckResult {
-    let channel = msg.channel(&ctx.cache);
+pub async fn check_bob_has_category(ctx: &Context, msg: &Message, _args: &mut Args) -> CheckResult {
+    let channel = msg.channel(&ctx.cache).await;
     if channel.is_none() {
         return CheckResult::new_log("Could not fetch bot channel info from the Discord API.");
     }
@@ -19,12 +19,11 @@ pub fn check_bob_has_category(ctx: &mut Context, msg: &Message, _args: &mut Args
     }
 
     let channel = channel.unwrap();
-    let channel = channel.read();
     if channel.category_id.is_none() {
         return CheckResult::new_user("This channel isn't inside a category.");
     }
 
-    let category = channel.category_id.unwrap().to_channel(&ctx.http);
+    let category = channel.category_id.unwrap().to_channel(&ctx.http).await;
     if category.is_err() {
         return CheckResult::new_log("Could not fetch bot category info from the Discord API");
     }

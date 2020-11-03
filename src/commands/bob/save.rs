@@ -19,19 +19,17 @@ use crate::utils::{kebabify, PermissionOverwritesContainer};
 #[command]
 #[only_in(guilds)]
 #[checks(SentInBob, BobHasCategory, AuthorConnectedToVoice, PresetHasValidName)]
-pub fn save(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
+pub async fn save(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     debug!("Running command: !save");
 
-    let guild = msg.guild(&ctx.cache).unwrap();
-    let guild = guild.read();
+    let guild = msg.guild(&ctx.cache).await.unwrap();
     let author_voice_state = guild.voice_states.get(&msg.author.id).unwrap();
 
     let preset_name = kebabify(args.rest());
 
     let author_voice_channel = author_voice_state.channel_id.unwrap();
-    let author_voice_channel = author_voice_channel.to_channel(&ctx.http)?;
+    let author_voice_channel = author_voice_channel.to_channel(&ctx.http).await?;
     let author_voice_channel = author_voice_channel.guild().unwrap();
-    let author_voice_channel = author_voice_channel.read();
 
     let permission_overwrites = &author_voice_channel.permission_overwrites;
     let serialized_overwrites = toml::to_string(&PermissionOverwritesContainer{permissions: permission_overwrites.clone()}).expect("Failed to convert permission overwrites to JSON");
@@ -49,7 +47,7 @@ pub fn save(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
         return CommandResult::Err(CommandError::from("Could not write preset file"))
     }
 
-    msg.channel_id.say(&ctx.http, format!("📁 Saved permissions of <#{}> to preset `{}`.", &author_voice_channel.id, &preset_name))?;
+    msg.channel_id.say(&ctx.http, format!("📁 Saved permissions of <#{}> to preset `{}`.", &author_voice_channel.id, &preset_name)).await?;
 
     Ok(())
 }

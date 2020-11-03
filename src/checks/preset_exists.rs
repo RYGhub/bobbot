@@ -8,9 +8,8 @@ use serenity::framework::standard::macros::*;
 
 #[check]
 #[name = "PresetExists"]
-pub fn check_preset_exists(ctx: &mut Context, msg: &Message, args: &mut Args) -> CheckResult {
-    let guild = msg.guild(&ctx.cache).unwrap();
-    let guild = guild.read();
+pub async fn check_preset_exists(ctx: &Context, msg: &Message, args: &mut Args) -> CheckResult {
+    let guild = msg.guild(&ctx.cache).await.unwrap();
 
     let preset_name = args.current();
     if preset_name.is_none() {

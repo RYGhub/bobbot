@@ -6,7 +6,7 @@ use serenity::framework::standard::macros::*;
 
 #[check]
 #[name = "PresetHasValidName"]
-pub fn check_preset_exists(_ctx: &mut Context, _msg: &Message, args: &mut Args) -> CheckResult {
+pub async fn check_preset_exists(_ctx: &Context, _msg: &Message, args: &mut Args) -> CheckResult {
     let preset_name = args.current();
     if preset_name.is_none() {
         return CheckResult::new_user("You didn't specify the name to save the preset to.")
