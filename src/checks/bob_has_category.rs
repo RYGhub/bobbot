@@ -25,7 +25,7 @@ pub async fn check_bob_has_category(ctx: &Context, msg: &Message, _args: &mut Ar
 
     let category = channel.category_id.unwrap().to_channel(&ctx.http).await;
     if category.is_err() {
-        return CheckResult::new_log("Could not fetch bot category info from the Discord API");
+        return CheckResult::new_log("Could not fetch bot category info from the Discord API.");
     }
 
     CheckResult::Success

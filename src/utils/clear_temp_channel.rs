@@ -63,11 +63,17 @@ pub async fn clear_empty_temp_channel(ctx: Context, guild: Option<GuildId>, old:
         return Err("Channel isn't empty");
     }
 
-    debug!("Notifying of the channel deletion");
-    let _ = bob_channel.say(&ctx.http, format!("🕒 Temp channel <#{}> is empty and will be deleted in 60 seconds, unless someone re-joins.", &old_channel.id)).await.or(Err("Could not send deletion message"));
+    debug!("Getting channel deletion grace time...");
+    let grace_time = env::var("BOB_DELETION_TIME").unwrap_or(String::from("60"));
+    let grace_time = grace_time.parse::<u64>().expect("Could not parse channel deletion time");
+    let grace_time = std::time::Duration::from_secs(grace_time);
+    debug!("Grace time is: {}s", &grace_time.as_secs().to_string());
 
-    debug!("Starting grace time before channel deletion");
-    tokio::time::delay_for(std::time::Duration::from_secs(60)).await;
+    debug!("Notifying of the channel deletion");
+    let _ = bob_channel.say(&ctx.http, format!("🕒 {} will be deleted in {} seconds if it will still be empty.", &old_channel.mention(), &grace_time.as_secs().to_string())).await.or(Err("Could not send deletion message"));
+
+    debug!("Starting grace time before channel deletion...");
+    tokio::time::delay_for(grace_time).await;
 
     debug!("Fetching channel members for the second time");
     let members: Vec<Member> = old_channel.members(&ctx.cache).await.or(Err("Could not fetch channel members"))?;
@@ -76,11 +82,12 @@ pub async fn clear_empty_temp_channel(ctx: Context, guild: Option<GuildId>, old:
         return Err("Channel isn't empty anymore");
     }
 
-    info!("Deleting #{}", &old_channel.name);
+    debug!("Deleting #{}", &old_channel.name);
     old_channel.delete(&ctx.http).await.or(Err("Failed to delete channel"))?;
 
     debug!("Notifying the chat of the channel deletion");
-    let _ = bob_channel.say(&ctx.http, format!("🗑 Temp channel <#{}> was deleted, as it stayed empty for 60 seconds.", &old_channel.id)).await.or(Err("Could not send deletion message"));
+    let _ = bob_channel.say(&ctx.http, format!("🗑 {} was deleted, as it has been empty for {} seconds.", &old_channel.mention(), &grace_time.as_secs().to_string())).await.or(Err("Could not send deletion message"));
 
+    info!("Successfully deleted #{}!", &old_channel.name);
     Ok(())
 }

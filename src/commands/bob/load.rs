@@ -12,7 +12,7 @@ use crate::checks::bob_has_category::*;
 use crate::checks::author_connected_to_voice::*;
 use crate::checks::preset_exists::*;
 
-use crate::utils::{kebabify, PermissionOverwritesContainer};
+use crate::utils::{kebabify, BobPreset};
 use crate::utils::create_temp_channel::create_temp_channel;
 
 
@@ -23,37 +23,72 @@ use crate::utils::create_temp_channel::create_temp_channel;
 pub async fn load(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     debug!("Running command: !load");
 
+    debug!("Getting guild...");
     let guild = msg.guild(&ctx.cache).await.unwrap();
-    let channel = msg.channel(&ctx.cache).await.unwrap().guild().unwrap();
-    let category = channel.category_id.unwrap().to_channel(&ctx.http).await.unwrap().category().unwrap();
+    debug!("Guild is: {}", &guild.name);
 
-    let preset_name: String = args.single()?;
+    debug!("Getting command channel...");
+    let command_channel = msg.channel(&ctx.cache).await.unwrap().guild().unwrap();
+    debug!("Command channel is: #{}", &command_channel.name);
+
+    debug!("Getting category...");
+    let category_channel = command_channel.category_id.unwrap().to_channel(&ctx.http).await.unwrap().category().unwrap();
+    debug!("Category channel is: #{}", &category_channel.name);
+
+    debug!("Parsing args...");
+    let preset_name: String = args.single().unwrap();
+    debug!("Preset name is: {}", &preset_name);
     let new_channel_name = kebabify(args.rest());
+    debug!("Channel name will be: #{}", &new_channel_name);
 
-    debug!("Starting to type");
-    channel.broadcast_typing(&ctx.http).await?;
+    debug!("Broadcasting typing...");
+    command_channel.broadcast_typing(&ctx.http).await?;
 
-    debug!("Temp channel permissions will be loaded from the preset {}", &preset_name);
-    let current_path = env::current_dir().expect("Could not get current working directory");
+    debug!("Getting default channel permissions from the Bob category...");
+    let mut permissions = category_channel.permission_overwrites.clone();
+
+    debug!("Getting working directory...");
+    let current_path = env::current_dir().expect("Could not get working directory");
+
     let presets_dir = current_path.join("presets");
+    debug!("Accessing presets directory: {}", &presets_dir.to_string_lossy());
+
     let guild_dir = presets_dir.join(format!("{}", guild.id));
-    let preset_path = guild_dir.join(format!("{}.toml", &preset_name));
-    let mut preset_file = fs::File::open(preset_path).unwrap();
-    let mut serialized_overwrites = Vec::new();
-    preset_file.read_to_end(&mut serialized_overwrites).expect(&*format!("Could not read file for preset {}", &preset_name));
-    let serialized_overwrites = String::from_utf8(serialized_overwrites).expect(&*format!("Could not create UTF-8 string for preset {}", &preset_name));
-    let permission_overwrites: PermissionOverwritesContainer = toml::from_str(&*serialized_overwrites).expect(&*format!("Could not parse file for preset {}", &preset_name));
+    debug!("Accessing guild presets directory: {}", &guild_dir.to_string_lossy());
 
-    debug!("Creating temp channel");
-    let created = create_temp_channel(ctx, &guild, &category.id, &new_channel_name, permission_overwrites.permissions.clone()).await?;
+    let file_name = format!("{}.toml", &preset_name);
+    let preset_path = guild_dir.join(&file_name);
+    debug!("Accessing guild preset file: {}", &preset_path.to_string_lossy());
+    let mut preset_file = fs::File::open(&preset_path).expect("Could not open preset file");
 
-    debug!("Sending channel created message");
-    msg.channel_id.say(&ctx.http, format!("🔨 Temp channel <#{}> was built with permissions from the preset `{}`.", &created.id, &preset_name)).await?;
+    debug!("Reading bytes from the file...");
+    let mut serialized = Vec::new();
+    preset_file.read_to_end(&mut serialized).expect("Could not read preset file");
 
-    debug!("Moving command caller to the created channel");
+    debug!("Deserializing the bytes into the preset...");
+    let preset: BobPreset = toml::from_slice(&serialized).expect("Could not deserialize preset");
+
+    debug!("Adding preset permissions...");
+    for permission_overwrite in &preset.permissions {
+        permissions.push(permission_overwrite.clone())
+    }
+
+    debug!("Adding full permissions for channel owner: {}", &msg.author.mention());
+    permissions.push(PermissionOverwrite{
+        allow: Permissions::all(),
+        deny: Permissions::empty(),
+        kind: PermissionOverwriteType::Member(msg.author.id.clone())
+    });
+
+    debug!("Creating channel...");
+    let created = create_temp_channel(&ctx, &guild, &category_channel.id, &new_channel_name, permissions).await?;
+
+    debug!("Sending channel created message...");
+    msg.channel_id.say(&ctx.http, format!("🔨 Built channel {} with owner {} from preset {}!", &created.mention(), &msg.author.mention(), &preset_name)).await?;
+
+    debug!("Moving command caller to the created channel...");
     guild.move_member(&ctx.http, &msg.author.id, &created.id).await?;
 
-    debug!("Build command executed successfully!");
-
+    info!("Successfully built channel #{} for {}#{} with preset {}!", &created.name, &msg.author.name, &msg.author.discriminator, &preset_name);
     Ok(())
 }

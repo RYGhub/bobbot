@@ -27,6 +27,8 @@ pub fn kebabify(s: &str) -> String {
 
 /// A container for serializing PermissionOverwrites with a `[[permissions]]` header.
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct PermissionOverwritesContainer {
-    pub permissions: Vec<PermissionOverwrite>
+pub struct BobPreset {
+    pub bitrate: u64,
+    pub user_limit: Option<u64>,
+    pub permissions: Vec<PermissionOverwrite>,
 }

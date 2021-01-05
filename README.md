@@ -13,13 +13,15 @@ Bob is a bot that allows a group of users to create voice channels that are auto
 
 While you are connected to any voice channel:
 
-- `!build <channel-name>` | **create a new temporary channel** and enter it
-- `!save <preset-name>` | **save the permissions** of the channel you currently are in to a name
-- `!load <preset-name> <channel-name>` | **load the permissions** with the name
+- `/build <channel-name>` | **create a new temporary channel** and enter it
+- `/save <preset-name>` | **save the permissions** of the channel you currently are in to a name
+- `/load <preset-name> <channel-name>` | **load the permissions** with the name
 
 ## Add to your server
 
 > The bot is still in the alpha stage of development, there are no guarantees of uptime or stability!
+> 
+> Please message `Steffo#4036` if you decide to add this bot to a new server :)
 
 To add the bot to your server:
 
@@ -36,8 +38,9 @@ To host your own instance of Bob:
 1. [Download the latest release on GitHub](https://github.com/Steffo99/bob/releases).
 2. Set the `DISCORD_TOKEN` environment variable to your [Discord bot token](https://discord.com/developers/applications).
 3. Set the `BOB_CHANNEL_NAME` environment variable to the name of Bob's text channel (without the starting hash, ex: `bob`).
-4. _If you're on Linux, set the executable flag on the file you downloaded!_
-5. Run the executable.
+4. Set the `BOB_DELETION_TIME` environment variable to how long would you like empty channels to stay available before being deleted. Defaults to `60` if not set.
+5. _If you're on OS X or Linux, set the executable flag on the file you downloaded!_
+6. Run the executable.
 
 ## Compile from source
 

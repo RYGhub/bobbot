@@ -2,8 +2,8 @@ mod checks;
 mod commands;
 mod utils;
 
-
 use std::env;
+use std::collections::HashSet;
 
 #[macro_use]
 extern crate log;
@@ -43,6 +43,20 @@ impl EventHandler for BobHandler {
 }
 
 
+#[help]
+#[max_levenshtein_distance(3)]
+async fn help(
+    context: &Context,
+    msg: &Message,
+    args: Args,
+    help_options: &'static HelpOptions,
+    groups: &[&'static CommandGroup],
+    owners: HashSet<UserId>
+) -> CommandResult {
+    let _ = help_commands::with_embeds(context, msg, args, help_options, groups, owners).await;
+    Ok(())
+}
+
 
 /// Handle command errors.
 #[hook]
@@ -70,6 +84,10 @@ async fn on_error(ctx: &Context, msg: &Message, error: DispatchError) {
                 }
             }
         }
+        DispatchError::Ratelimited(info) => {
+            warn!("Rate limited for {} seconds!", &info.as_secs().to_string());
+            let _ = msg.channel_id.say(&ctx.http, format!("⚠️ The bot is currently rate limited. Try again in {} seconds.", &info.as_secs().to_string()));
+        }
         _ => {
             warn!("Unmatched error occoured!");
             let _ = msg.channel_id.say(&ctx.http, "☢️ An unhandled error just occoured! It has been logged to the console.").await;
@@ -95,6 +113,8 @@ async fn main() {
             )
                 .group(&BOB_GROUP)
                 .on_dispatch_error(on_error)
+                // Help does not currently work for some reason.
+                // .help(&HELP)
         )
         .await
         .expect("Error creating Discord client");
