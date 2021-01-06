@@ -48,7 +48,9 @@ pub async fn build(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     });
 
     debug!("Creating channel...");
-    let created = create_temp_channel(&ctx, &guild, &category_channel.id, &new_channel_name, permissions).await?;
+    let bitrate = 64000;
+    let user_limit = None;
+    let created = create_temp_channel(&ctx, &guild, &category_channel.id, &new_channel_name, permissions, &bitrate, &user_limit).await?;
 
     debug!("Sending channel created message...");
     msg.channel_id.say(&ctx.http, format!("🔨 Built channel {} with owner {}!", &created.mention(), &msg.author.mention())).await?;

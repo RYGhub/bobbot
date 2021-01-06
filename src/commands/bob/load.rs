@@ -81,10 +81,10 @@ pub async fn load(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
     });
 
     debug!("Creating channel...");
-    let created = create_temp_channel(&ctx, &guild, &category_channel.id, &new_channel_name, permissions).await?;
+    let created = create_temp_channel(&ctx, &guild, &category_channel.id, &new_channel_name, permissions, &preset.bitrate, &preset.user_limit).await?;
 
     debug!("Sending channel created message...");
-    msg.channel_id.say(&ctx.http, format!("🔨 Built channel {} with owner {} from preset {}!", &created.mention(), &msg.author.mention(), &preset_name)).await?;
+    msg.channel_id.say(&ctx.http, format!("🔨 Built channel {} with owner {} from preset `{}`!", &created.mention(), &msg.author.mention(), &preset_name)).await?;
 
     debug!("Moving command caller to the created channel...");
     guild.move_member(&ctx.http, &msg.author.id, &created.id).await?;

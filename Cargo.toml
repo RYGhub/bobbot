@@ -1,6 +1,6 @@
 [package]
 name = "bobbot"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["Stefano Pigozzi <ste.pigozzi@gmail.com>"]
 edition = "2018"
 description = "A Discord bot for creating and destroying temporary voice channels"
@@ -46,3 +46,6 @@ version = "0.2.22"
 features = [
     "full"
 ]
+
+[dependencies.num-traits]
+version = "0.2"
