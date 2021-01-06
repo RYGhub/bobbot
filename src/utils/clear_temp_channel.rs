@@ -86,7 +86,7 @@ pub async fn clear_empty_temp_channel(ctx: Context, guild: Option<GuildId>, old:
     old_channel.delete(&ctx.http).await.or(Err("Failed to delete channel"))?;
 
     debug!("Notifying the chat of the channel deletion");
-    let _ = bob_channel.say(&ctx.http, format!("🗑 {} was deleted, as it has been empty for {} seconds.", &old_channel.mention(), &grace_time.as_secs().to_string())).await.or(Err("Could not send deletion message"));
+    let _ = bob_channel.say(&ctx.http, format!("🗑 #{} was deleted, as it has been empty for {} seconds.", &old_channel.name, &grace_time.as_secs().to_string())).await.or(Err("Could not send deletion message"));
 
     info!("Successfully deleted #{}!", &old_channel.name);
     Ok(())
