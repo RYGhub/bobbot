@@ -101,6 +101,8 @@ async fn main() {
     let token = env::var("DISCORD_TOKEN").expect("Missing DISCORD_TOKEN");
     env::var("BOB_CHANNEL_NAME").expect("Missing BOB_CHANNEL_NAME");
 
+    let prefix = env::var("BOB_PREFIX").unwrap_or(String::from("!"));
+
     pretty_env_logger::init();
     debug!("Logger initialized!");
 
@@ -109,7 +111,7 @@ async fn main() {
         .framework(
             StandardFramework::new().configure(
                 |c| c
-                    .prefix("!")
+                    .prefix(&prefix)
             )
                 .group(&BOB_GROUP)
                 .on_dispatch_error(on_error)

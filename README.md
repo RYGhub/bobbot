@@ -39,6 +39,7 @@ To host your own instance of Bob:
 2. Set the `DISCORD_TOKEN` environment variable to your [Discord bot token](https://discord.com/developers/applications).
 3. Set the `BOB_CHANNEL_NAME` environment variable to the name of Bob's text channel (without the starting hash, ex: `bob`).
 4. Set the `BOB_DELETION_TIME` environment variable to how long would you like empty channels to stay available before being deleted. Defaults to `60` if not set.
+4. Set the `BOB_PREFIX` environment variable to the command prefix you'd like the bot to use. Defaults to `!` if not set.
 5. _If you're on OS X or Linux, set the executable flag on the file you downloaded!_
 6. Run the executable.
 
