@@ -98,13 +98,17 @@ async fn on_error(ctx: &Context, msg: &Message, error: DispatchError) {
 /// Initialize and start the bot.
 #[tokio::main]
 async fn main() {
-    let token = env::var("DISCORD_TOKEN").expect("Missing DISCORD_TOKEN");
-    env::var("BOB_CHANNEL_NAME").expect("Missing BOB_CHANNEL_NAME");
-
-    let prefix = env::var("BOB_PREFIX").unwrap_or(String::from("!"));
-
     pretty_env_logger::init();
     debug!("Logger initialized!");
+
+    let token = env::var("DISCORD_TOKEN").expect("Missing DISCORD_TOKEN");
+    debug!("Obtained bot token!");
+
+    let prefix = env::var("BOB_PREFIX").unwrap_or(String::from("!"));
+    info!("Bot prefix is: {}", &prefix);
+
+    let bob_channel_name = env::var("BOB_CHANNEL_NAME").expect("Missing BOB_CHANNEL_NAME");
+    info!("Bob channel name is: #{}", &bob_channel_name);
 
     let mut client = Client::builder(&token)
         .event_handler(BobHandler)
