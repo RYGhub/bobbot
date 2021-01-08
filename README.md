@@ -5,6 +5,8 @@ A Discord bot for creating and destroying **temporary voice channels**.
 > _Ever wanted [Mumble](https://www.mumble.info/)'s temporary voice channels on Discord?_  
 > _Bob can help you!_
 
+![](resources/logo.svg)
+
 ## About
 
 Bob is a bot that allows a group of users to create voice channels that are automatically deleted after everybody leaves.
