@@ -18,6 +18,7 @@ use crate::utils::create_temp_channel::create_temp_channel;
 
 /// Build a new temporary channel with the specified preset.
 #[command]
+#[aliases("l")]
 #[only_in(guilds)]
 #[checks(SentInBob, BobHasCategory, AuthorConnectedToVoice, PresetExists)]
 pub async fn load(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {

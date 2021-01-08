@@ -13,6 +13,7 @@ use crate::utils::create_temp_channel::create_temp_channel;
 
 /// Build a new temporary channel.
 #[command]
+#[aliases("b")]
 #[only_in(guilds)]
 #[checks(SentInBob, BobHasCategory, AuthorConnectedToVoice)]
 pub async fn build(ctx: &Context, msg: &Message, args: Args) -> CommandResult {

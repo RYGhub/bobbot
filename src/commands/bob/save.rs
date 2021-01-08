@@ -17,6 +17,7 @@ use crate::utils::{kebabify, BobPreset};
 
 /// Save the permissions to a file.
 #[command]
+#[aliases("s")]
 #[only_in(guilds)]
 #[checks(SentInBob, BobHasCategory, AuthorConnectedToVoice, PresetHasValidName)]
 pub async fn save(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
