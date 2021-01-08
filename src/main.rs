@@ -44,7 +44,13 @@ impl EventHandler for BobHandler {
 
 
 #[help]
+#[individual_command_tip="To see the help for a specific command, please pass the command as argument :)"]
+#[command_not_found_text = "⚠️ The specified command does not exist."]
 #[max_levenshtein_distance(3)]
+#[indention_prefix="-"]
+#[lacking_permissions="Nothing"]
+#[lacking_role="Nothing"]
+#[wrong_channel="Nothing"]
 async fn help(
     context: &Context,
     msg: &Message,
@@ -120,7 +126,7 @@ async fn main() {
                 .group(&BOB_GROUP)
                 .on_dispatch_error(on_error)
                 // Help does not currently work for some reason.
-                // .help(&HELP)
+                .help(&HELP)
         )
         .await
         .expect("Error creating Discord client");

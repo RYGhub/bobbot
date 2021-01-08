@@ -9,8 +9,8 @@ use serenity::framework::standard::macros::*;
 use crate::checks::sent_in_bob::*;
 
 
-/// Build a new temporary channel with the specified preset.
 #[command]
+#[description="Build a new temporary channel with the specified preset."]
 #[only_in(guilds)]
 #[checks(SentInBob)]
 pub async fn list(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {

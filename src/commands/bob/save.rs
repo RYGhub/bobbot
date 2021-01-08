@@ -15,8 +15,8 @@ use crate::checks::preset_has_valid_name::*;
 use crate::utils::{kebabify, BobPreset};
 
 
-/// Save the permissions to a file.
 #[command]
+#[description="Save the permissions of the channel you are currently in to a preset."]
 #[aliases("s")]
 #[only_in(guilds)]
 #[checks(SentInBob, BobHasCategory, AuthorConnectedToVoice, PresetHasValidName)]

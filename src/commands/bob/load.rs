@@ -16,8 +16,8 @@ use crate::utils::{kebabify, BobPreset};
 use crate::utils::create_temp_channel::create_temp_channel;
 
 
-/// Build a new temporary channel with the specified preset.
 #[command]
+#[description="Build a new temporary channel with the specified preset."]
 #[aliases("l")]
 #[only_in(guilds)]
 #[checks(SentInBob, BobHasCategory, AuthorConnectedToVoice, PresetExists)]

@@ -11,5 +11,6 @@ use crate::commands::bob::load::*;
 use crate::commands::bob::list::*;
 
 #[group]
+#[description="A group that provides Channel Builder commands."]
 #[commands(build, save, load, list)]
 pub struct Bob;

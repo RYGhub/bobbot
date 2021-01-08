@@ -11,8 +11,8 @@ use crate::utils::kebabify;
 use crate::utils::create_temp_channel::create_temp_channel;
 
 
-/// Build a new temporary channel.
 #[command]
+#[description="Build a new temporary channel."]
 #[aliases("b")]
 #[only_in(guilds)]
 #[checks(SentInBob, BobHasCategory, AuthorConnectedToVoice)]
