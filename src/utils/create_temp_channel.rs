@@ -34,6 +34,7 @@ pub async fn create_temp_channel<S, I>(ctx: &Context, guild: &Guild, category_id
             debug!("Channel won't have a user limit")
         }
 
+        debug!("Returning channel...");
         c
     }).await?;
     info!("Created temp channel #{}", &created.name);

@@ -41,12 +41,21 @@ pub async fn build(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     debug!("Getting default channel permissions from the Bob category...");
     let mut permissions = category_channel.permission_overwrites.clone();
 
+    /*
+    debug!("Adding full permissions for Bob: {}", &msg.author.mention());
+    permissions.push(PermissionOverwrite{
+        allow: Permissions::from_bits(602933008).unwrap(),
+        deny: Permissions::empty(),
+        kind: PermissionOverwriteType::Member(ctx.cache.current_user().await.id)
+    });
+
     debug!("Adding full permissions for channel owner: {}", &msg.author.mention());
     permissions.push(PermissionOverwrite{
-        allow: Permissions::all(),
+        allow:  Permissions::from_bits(602933008).unwrap(),
         deny: Permissions::empty(),
         kind: PermissionOverwriteType::Member(msg.author.id.clone())
     });
+     */
 
     debug!("Creating channel...");
     let bitrate = 64000;
