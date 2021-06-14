@@ -1,4 +1,3 @@
-mod checks;
 mod commands;
 mod utils;
 
@@ -21,15 +20,13 @@ struct BobHandler;
 
 #[serenity::async_trait]
 impl EventHandler for BobHandler {
+
     /// Handle the ready event.
     async fn ready(&self, _context: Context, ready: Ready) {
         info!("{} is ready!", &ready.user.name);
     }
 
     /// Called when the voice state of an user changes.
-    // IntelliJ Rust inspection is broken
-    // https://github.com/intellij-rust/intellij-rust/issues/1191
-    // noinspection RsTraitImplementation
     async fn voice_state_update(&self, ctx: Context, guild_id: Option<GuildId>, old: Option<VoiceState>, new: VoiceState) {
         debug!("Received a voice state update");
 
@@ -104,6 +101,10 @@ async fn main() {
     let token = env::var("DISCORD_TOKEN").expect("Missing DISCORD_TOKEN");
     debug!("Obtained bot token!");
 
+    let appid = env::var("DISCORD_APPID").expect("Missing DISCORD_APPID");
+    let appid = appid.parse::<u64>().expect("Invalid integer DISCORD_APPID");
+    info!("Application id is: {}", &appid);
+
     let prefix = env::var("BOB_PREFIX").unwrap_or(String::from("!"));
     info!("Bot prefix is: {}", &prefix);
 
@@ -112,6 +113,7 @@ async fn main() {
 
     let mut client = Client::builder(&token)
         .event_handler(BobHandler)
+        .application_id(appid)
         .framework(
             StandardFramework::new().configure(
                 |c| c

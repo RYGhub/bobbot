@@ -3,10 +3,6 @@ use serenity::model::prelude::*;
 use serenity::framework::standard::*;
 use serenity::framework::standard::macros::*;
 
-use crate::checks::sent_in_bob::*;
-use crate::checks::bob_has_category::*;
-use crate::checks::author_connected_to_voice::*;
-
 use crate::utils::kebabify;
 use crate::utils::create_temp_channel::create_temp_channel;
 
@@ -15,7 +11,6 @@ use crate::utils::create_temp_channel::create_temp_channel;
 #[command]
 #[aliases("b")]
 #[only_in(guilds)]
-#[checks(SentInBob, BobHasCategory, AuthorConnectedToVoice)]
 pub async fn build(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     debug!("Running command: !build");
 

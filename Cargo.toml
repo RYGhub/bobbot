@@ -1,6 +1,6 @@
 [package]
 name = "bobbot"
-version = "0.7.0"
+version = "0.8.0"
 authors = ["Stefano Pigozzi <ste.pigozzi@gmail.com>"]
 edition = "2018"
 description = "A Discord bot for creating and destroying temporary voice channels"
@@ -10,42 +10,41 @@ license = "AGPL-3.0-or-later"
 keywords = ["discord", "discord-bot"]
 categories = ["command-line-utilities"]
 
-[badges]
-maintenance = {status = "actively-developed"}
-
 [dependencies]
 
 [dependencies.serenity]
-version = "0.9.3"
+version = "^0.10.8"
 features = [
     "cache",
     "framework",
-    "standard_framework"
+    "standard_framework",
+    "model",
+    "unstable_discord_api",
 ]
 
 [dependencies.once_cell]
-version = "1.4.1"
+version = "^1.8.0"
 
 [dependencies.regex]
-version = "1.3.9"
+version = "^1.5.4"
 
 [dependencies.log]
-version = "0.4.11"
+version = "^0.4.14"
 
 [dependencies.pretty_env_logger]
-version = "0.4.0"
+version = "^0.4.0"
 
 [dependencies.toml]
-version = "0.5.6"
+version = "^0.5.8"
 
 [dependencies.serde]
-version = "1.0.115"
+version = "^1.0.126"
 
 [dependencies.tokio]
-version = "0.2.22"
+version = "^1.6.1"
 features = [
     "full"
 ]
 
 [dependencies.num-traits]
-version = "0.2"
+version = "^0.2.14"

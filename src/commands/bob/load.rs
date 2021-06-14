@@ -7,11 +7,6 @@ use serenity::model::prelude::*;
 use serenity::framework::standard::*;
 use serenity::framework::standard::macros::*;
 
-use crate::checks::sent_in_bob::*;
-use crate::checks::bob_has_category::*;
-use crate::checks::author_connected_to_voice::*;
-use crate::checks::preset_exists::*;
-
 use crate::utils::{kebabify, BobPreset};
 use crate::utils::create_temp_channel::create_temp_channel;
 
@@ -20,7 +15,6 @@ use crate::utils::create_temp_channel::create_temp_channel;
 #[command]
 #[aliases("l")]
 #[only_in(guilds)]
-#[checks(SentInBob, BobHasCategory, AuthorConnectedToVoice, PresetExists)]
 pub async fn load(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     debug!("Running command: !load");
 

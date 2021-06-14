@@ -73,7 +73,7 @@ pub async fn clear_empty_temp_channel(ctx: Context, guild: Option<GuildId>, old:
     let _ = bob_channel.say(&ctx.http, format!("🕒 {} will be deleted in {} seconds if it will still be empty.", &old_channel.mention(), &grace_time.as_secs().to_string())).await.or(Err("Could not send deletion message"));
 
     debug!("Starting grace time before channel deletion...");
-    tokio::time::delay_for(grace_time).await;
+    tokio::time::sleep(grace_time).await;
 
     debug!("Fetching channel members for the second time");
     let members: Vec<Member> = old_channel.members(&ctx.cache).await.or(Err("Could not fetch channel members"))?;
