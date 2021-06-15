@@ -3,32 +3,33 @@ use serenity::model::prelude::*;
 use serenity::framework::standard::*;
 use serenity::framework::standard::macros::*;
 
-use crate::basics::*;
+use crate::basics::command::{get_guild, broadcast_typing, get_channel};
+use crate::basics::presets::BobPreset;
 
 
 /// Build a new temporary channel with the specified preset.
 #[command]
 #[only_in(guilds)]
-pub async fn list(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+pub async fn list(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
     debug!("Running command: !list");
 
-    let guild = get_guild(&msg, &ctx.cache).await;
-    let command_channel = get_channel(&msg, &ctx.cache).await;
-    let category = get_category(&command_channel, &ctx.http).await;
-    broadcast_typing(&command_channel, &ctx.http);
+    let guild = get_guild(&ctx.cache, &msg).await?;
+    let channel = get_channel(&ctx.cache, &msg).await?;
+    broadcast_typing(&ctx.http, &channel).await?;
 
-    let presets = get_guild_presets_filenames(&guild.id);
-    let presets: String = presets.into_iter().map(|s| {
-        format!("- `{}`", &s.file_name().expect("Guild preset file has no name").to_string_lossy())
-    }).collect();
+    let presets: String = BobPreset::guild_presets_file_list(&guild.id)?
+        .into_iter()
+        .map(|s| {
+            format!("- `{}`", &s.with_extension("").file_name().expect("File had no name").to_string_lossy())
+        })
+        .collect();
 
-    info!("Successfully displayed presets list!");
     msg.channel_id.say(
         &ctx.http,
         format!(
             "🗒 The following presets are available in **{}**:\n{}", &guild.name, &presets
         )
-    ).await;
+    ).await?;
 
     Ok(())
 }

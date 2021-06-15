@@ -3,43 +3,38 @@ use serenity::model::prelude::*;
 use serenity::framework::standard::*;
 use serenity::framework::standard::macros::*;
 
-use crate::basics::*;
+use crate::basics::command::{get_guild, get_channel, broadcast_typing, get_permows};
+use crate::basics::channel::{get_category, create};
+use crate::basics::voice::{move_member};
+use crate::basics::args::{parse_channel_name};
 
 
 /// Build a new temporary channel.
 #[command]
 #[aliases("b")]
 #[only_in(guilds)]
-pub async fn build(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
+pub async fn build(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
     debug!("Running command: !build");
 
-    let guild = get_guild(&msg, &ctx.cache).await;
-    let command_channel = get_channel(&msg, &ctx.cache).await;
-    let category = get_category(&command_channel, &ctx.http).await;
-    broadcast_typing(&command_channel, &ctx.http);
+    let guild = get_guild(&ctx.cache, &msg).await?;
+    let channel = get_channel(&ctx.cache, &msg).await?;
+    let category = get_category(&ctx.http, &channel).await?;
 
-    let channel_name = parse_channel_name(args);
-    let base_permow = get_category_permows(&category);
-    let own_permow = get_own_permow(&ctx.cache).await;
-    let author_permow = get_author_permow(&msg);
+    broadcast_typing(&ctx.http, &channel).await?;
+    let channel_name = parse_channel_name(args)?;
 
-    let created = create_channel(
+    let created = create(
         &ctx.http,
         &guild,
-        &category.id,
+        category.clone().and_then(|cat| Some(cat.id)),  // Can be improved, I think
         &channel_name,
-        [
-            base_permow,
-            vec![own_permow],
-            vec![author_permow]
-        ].concat(),
+        get_permows(&ctx.cache, &category, msg.author.id.clone()).await,
         64000,
         None,
-    ).await;
+    ).await?;
 
-    move_member(&ctx.http, &guild, &msg.author.id, &created.id).await;
+    move_member(&ctx.http, &guild, &msg.author.id, &created.id).await?;
 
-    info!("Successfully built channel #{} for {}#{}!", &created.name, &msg.author.name, &msg.author.discriminator);
     msg.channel_id.say(
         &ctx.http,
         format!(
@@ -47,7 +42,7 @@ pub async fn build(ctx: &Context, msg: &Message, mut args: Args) -> CommandResul
             &created.mention(),
             &msg.author.mention()
         )
-    ).await;
+    ).await?;
 
     Ok(())
 }

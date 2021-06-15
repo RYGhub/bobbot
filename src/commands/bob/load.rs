@@ -3,7 +3,11 @@ use serenity::model::prelude::*;
 use serenity::framework::standard::*;
 use serenity::framework::standard::macros::*;
 
-use crate::basics::*;
+use crate::basics::command::{get_guild, get_channel, broadcast_typing, get_permows_with_preset};
+use crate::basics::channel::{get_category, create};
+use crate::basics::args::{parse_preset_name, parse_channel_name};
+use crate::basics::presets::BobPreset;
+use crate::basics::voice::{move_member};
 
 
 /// Build a new temporary channel with the specified preset.
@@ -13,35 +17,27 @@ use crate::basics::*;
 pub async fn load(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     debug!("Running command: !load");
 
-    let guild = get_guild(&msg, &ctx.cache).await;
-    let command_channel = get_channel(&msg, &ctx.cache).await;
-    let category = get_category(&command_channel, &ctx.http).await;
-    broadcast_typing(&command_channel, &ctx.http);
+    let guild = get_guild(&ctx.cache, &msg).await?;
+    let channel = get_channel(&ctx.cache, &msg).await?;
+    let category = get_category(&ctx.http, &channel).await?;
+    broadcast_typing(&ctx.http, &channel).await?;
 
-    let preset_name = parse_preset_name(&mut args);
-    let channel_name = parse_channel_name(args);
-    let base_permow = get_category_permows(&category);
-    let own_permow = get_own_permow(&ctx.cache).await;
-    let author_permow = get_author_permow(&msg);
+    let preset_name = parse_preset_name(&mut args)?;
+    let channel_name = parse_channel_name(args)?;
 
-    let preset = read_guild_preset(&guild.id, &preset_name);
+    let preset = BobPreset::read_guild(&guild.id, &preset_name)?;
 
-    let created = create_channel(
+    let created = create(
         &ctx.http,
         &guild,
-        &category.id,
+        category.clone().and_then(|cat| Some(cat.id)),  // Can be improved, I think
         &channel_name,
-        [
-            base_permow,
-            preset.permows,
-            vec![own_permow],
-            vec![author_permow]
-        ].concat(),
+        get_permows_with_preset(&ctx.cache, &category, msg.author.id.clone(), &preset).await,
         preset.bitrate,
         preset.user_limit,
-    ).await;
+    ).await?;
 
-    move_member(&ctx.http, &guild, &msg.author.id, &created.id).await;
+    move_member(&ctx.http, &guild, &msg.author.id, &created.id).await?;
 
     info!("Successfully built channel #{} for {}#{} with preset {}!",
           &created.name, &msg.author.name, &msg.author.discriminator, &preset_name);
@@ -53,7 +49,7 @@ pub async fn load(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
             &created.mention(),
             &msg.author.mention(),
             &preset_name)
-    ).await;
+    ).await?;
 
     Ok(())
 }
