@@ -24,7 +24,7 @@ pub async fn list(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         })
         .collect();
 
-    msg.channel_id.say(
+    msg.reply(
         &ctx.http,
         format!(
             "🗒 The following presets are available in **{}**:\n{}", &guild.name, &presets

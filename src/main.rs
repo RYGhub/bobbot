@@ -15,6 +15,8 @@ use serenity::framework::standard::*;
 use serenity::framework::standard::macros::*;
 
 use crate::commands::bob::BOB_GROUP;
+use crate::basics::result::BobResult;
+use std::convert::{TryFrom};
 
 
 struct BobHandler;
@@ -93,6 +95,13 @@ async fn on_error(ctx: &Context, msg: &Message, error: DispatchError) {
     }
 }
 
+#[hook]
+async fn after_hook(ctx: &Context, msg: &Message, _: &str, result: CommandResult) {
+    if let Err(error) = result {
+        msg.reply(&ctx.http, format!("⚠️ {}", &error)).await;
+    }
+}
+
 /// Initialize and start the bot.
 #[tokio::main]
 async fn main() {
@@ -116,12 +125,13 @@ async fn main() {
         .event_handler(BobHandler)
         .application_id(appid)
         .framework(
-            StandardFramework::new().configure(
-                |c| c
+            StandardFramework::new()
+                .configure(|c| c
                     .prefix(&prefix)
-            )
+                )
                 .group(&BOB_GROUP)
                 .on_dispatch_error(on_error)
+                .after(after_hook)
                 // Help does not currently work for some reason.
                 // .help(&HELP)
         )

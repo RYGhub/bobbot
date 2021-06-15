@@ -42,7 +42,7 @@ pub async fn load(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
     info!("Successfully built channel #{} for {}#{} with preset {}!",
           &created.name, &msg.author.name, &msg.author.discriminator, &preset_name);
 
-    msg.channel_id.say(
+    msg.reply(
         &ctx.http,
         format!(
             "🔨 Built channel {} with owner {} from preset `{}`!",

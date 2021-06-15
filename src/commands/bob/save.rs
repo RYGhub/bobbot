@@ -28,7 +28,7 @@ pub async fn save(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
     let preset = BobPreset::create_from_voice_channel(&voice_channel)?;
     preset.write_guild(&guild.id, &preset_name)?;
 
-    msg.channel_id.say(
+    msg.reply(
         &ctx.http,
         format!(
             "📁 Saved permissions of {} to preset `{}`!",
