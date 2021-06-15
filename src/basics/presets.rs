@@ -1,6 +1,6 @@
 use std::env::{current_dir};
 use std::path::{PathBuf};
-use std::fs::{File, read_dir};
+use std::fs::{File, read_dir, create_dir_all};
 use std::io::{Read, Write};
 use serde::{Serialize, Deserialize};
 use serenity::model::prelude::{PermissionOverwrite, VideoQualityMode, GuildId, GuildChannel};
@@ -33,7 +33,7 @@ impl BobPreset {
             BobPreset {
                 bitrate: channel::get_bitrate(&channel)?,
                 user_limit: channel::get_user_limit(&channel)?,
-                video_quality: channel::get_video_quality(&channel)?,
+                video_quality: channel::get_video_quality(&channel),
                 permows: clone_from_guildchannel(&channel),
             }
         )
@@ -109,6 +109,10 @@ impl BobPreset {
     /// Write the given [BobPreset] for the given guild and name.
     pub fn write_guild(&self, guild_id: &GuildId, preset_name: &str) -> BobResult<()> {
         let filename = BobPreset::guild_preset_filename(&guild_id, preset_name)?;
+
+        create_dir_all(filename.clone().parent().unwrap())
+            .map_err(|_| BobError {msg: "Could not create preset directory"});
+
         let file = File::create(&filename)
             .map_err(|_| BobError {msg: "Could not create preset file"})?;
 

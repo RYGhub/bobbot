@@ -16,7 +16,6 @@ use serenity::framework::standard::macros::*;
 
 use crate::commands::bob::BOB_GROUP;
 use crate::basics::result::BobResult;
-use std::convert::{TryFrom};
 
 
 struct BobHandler;
@@ -98,7 +97,9 @@ async fn on_error(ctx: &Context, msg: &Message, error: DispatchError) {
 #[hook]
 async fn after_hook(ctx: &Context, msg: &Message, _: &str, result: CommandResult) {
     if let Err(error) = result {
-        msg.reply(&ctx.http, format!("⚠️ {}", &error)).await;
+        if let Err(he) = msg.reply(&ctx.http, format!("⚠️ {}", &error)).await {
+            error!("Failed to display error {} because of {}", &error, &he);
+        }
     }
 }
 

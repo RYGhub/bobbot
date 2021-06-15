@@ -9,7 +9,7 @@ pub struct BobError {
 
 impl Display for BobError {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        write!(f, "BobError: {}", &self.msg)
+        write!(f, "**Error**: {}", &self.msg)
     }
 }
 

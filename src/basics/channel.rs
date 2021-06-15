@@ -49,10 +49,10 @@ pub fn get_user_limit(channel: &GuildChannel) -> BobResult<Option<u32>> {
 
 
 /// Get the video quality of the given [GuildChannel].
-pub fn get_video_quality(channel: &GuildChannel) -> BobResult<VideoQualityMode> {
+pub fn get_video_quality(channel: &GuildChannel) -> VideoQualityMode {
     match channel.video_quality_mode {
-        Some(quality) => Ok(quality),
-        None => Err(BobError {msg: "Channel did not have any video quality"})
+        Some(quality) => quality,
+        None => VideoQualityMode::Auto,
     }
 }
 
