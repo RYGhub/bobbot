@@ -1,5 +1,6 @@
 mod commands;
 mod utils;
+mod basics;
 
 use std::env;
 use std::collections::HashSet;

@@ -1,4 +1,3 @@
-pub mod create_temp_channel;
 pub mod clear_temp_channel;
 
 use once_cell::sync::Lazy;
@@ -28,7 +27,7 @@ pub fn kebabify(s: &str) -> String {
 /// A container for serializing PermissionOverwrites with a `[[permissions]]` header.
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct BobPreset {
-    pub bitrate: u64,
-    pub user_limit: Option<u64>,
-    pub permissions: Vec<PermissionOverwrite>,
+    pub bitrate: u32,
+    pub user_limit: Option<u32>,
+    pub permows: Vec<PermissionOverwrite>,
 }
