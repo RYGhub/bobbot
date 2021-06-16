@@ -15,7 +15,6 @@ use serenity::framework::standard::*;
 use serenity::framework::standard::macros::*;
 
 use crate::commands::bob::BOB_GROUP;
-use crate::basics::result::BobResult;
 
 
 struct BobHandler;
@@ -93,6 +92,7 @@ async fn on_error(ctx: &Context, msg: &Message, error: DispatchError) {
         }
     }
 }
+
 
 #[hook]
 async fn after_hook(ctx: &Context, msg: &Message, _: &str, result: CommandResult) {

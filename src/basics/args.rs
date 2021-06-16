@@ -1,7 +1,7 @@
 use serenity::framework::standard::{Args};
 use once_cell::sync::{Lazy};
 use regex::{Regex};
-use crate::basics::result::{BobResult, BobError};
+use crate::basics::result::{BobResult, convert_error, BobError};
 
 /// Convert a string to an acceptable channel name using `kebab-lower-case`.
 pub fn channelify(s: &str) -> String {
@@ -28,7 +28,7 @@ pub fn channelify(s: &str) -> String {
 /// Parse a single argument as a preset name.
 pub fn parse_preset_name(args: &mut Args) -> BobResult<String> {
     args.single()
-        .map_err(|_| BobError {msg: "Missing preset name argument"})
+        .map_err(|e| convert_error(e, "Missing preset name argument"))
 }
 
 

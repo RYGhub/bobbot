@@ -1,6 +1,6 @@
 use serenity::model::prelude::{Guild, UserId, VoiceState, GuildChannel, ChannelId};
 use serenity::http::{Http};
-use crate::basics::result::{BobResult, BobError};
+use crate::basics::result::{BobResult, BobError, convert_error};
 
 
 /// Get a reference to the [VoiceState] of an user.
@@ -24,7 +24,7 @@ pub async fn get_voice_channel(http: &Http, guild: &Guild, user_id: &UserId) -> 
         .ok_or(BobError {msg: "Couldn't get channel id of user's voice state"})?;
 
     let channel = channel_id.to_channel(&http).await
-        .map_err(|_| BobError {msg: "Couldn't get channel information of user's voice state"})?;
+        .map_err(|e| convert_error(e, "Couldn't get channel information of user's voice state"))?;
 
     let guild_channel = channel.guild()
         .ok_or(BobError {msg: "Voice state channel wasn't a GuildChannel"})?;

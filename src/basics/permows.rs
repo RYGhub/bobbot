@@ -4,7 +4,7 @@ use serenity::model::prelude::{PermissionOverwriteType, PermissionOverwrite, Per
 /// Create a [PermissionOverwrite] which allows all [Permissions].
 pub fn allow_all(kind: PermissionOverwriteType) -> PermissionOverwrite {
     PermissionOverwrite {
-        allow: Permissions::all(),
+        allow: Permissions::from_bits(298845201).unwrap(),
         deny: Permissions::empty(),
         kind,
     }
@@ -14,8 +14,8 @@ pub fn allow_all(kind: PermissionOverwriteType) -> PermissionOverwrite {
 /// Create a [PermissionOverwrite] which denies all [Permissions].
 pub fn deny_all(kind: PermissionOverwriteType) -> PermissionOverwrite {
     PermissionOverwrite {
-        allow: Permissions::empty(),
-        deny: Permissions::all(),
+        allow: Permissions::all(),
+        deny: Permissions::from_bits(298845201).unwrap(),
         kind,
     }
 }

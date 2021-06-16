@@ -4,7 +4,7 @@ use std::fs::{File, read_dir, create_dir_all};
 use std::io::{Read, Write};
 use serde::{Serialize, Deserialize};
 use serenity::model::prelude::{PermissionOverwrite, VideoQualityMode, GuildId, GuildChannel};
-use crate::basics::result::{BobResult, BobError};
+use crate::basics::result::{BobResult, BobError, convert_error};
 use crate::basics::channel;
 use crate::basics::permows::{clone_from_guildchannel};
 
@@ -12,7 +12,7 @@ use crate::basics::permows::{clone_from_guildchannel};
 /// Get the current working directory.
 fn cwd() -> BobResult<PathBuf> {
     current_dir()
-        .map_err(|_| BobError {msg: "Couldn't get current working directory"})
+        .map_err(|e| convert_error(e, "Couldn't get current working directory"))
 }
 
 
@@ -21,7 +21,6 @@ fn cwd() -> BobResult<PathBuf> {
 pub struct BobPreset {
     pub bitrate: u32,
     pub user_limit: Option<u32>,
-    pub video_quality: VideoQualityMode,
     pub permows: Vec<PermissionOverwrite>,
 }
 
@@ -33,7 +32,6 @@ impl BobPreset {
             BobPreset {
                 bitrate: channel::get_bitrate(&channel)?,
                 user_limit: channel::get_user_limit(&channel)?,
-                video_quality: channel::get_video_quality(&channel),
                 permows: clone_from_guildchannel(&channel),
             }
         )
@@ -43,7 +41,6 @@ impl BobPreset {
     pub fn presets_dir() -> BobResult<PathBuf> {
         Ok(cwd()?.join("presets"))
     }
-
 
     /// Get the presets directory of the given guild (`./presets/{guild_id}/`).
     pub fn guild_presets_dir(guild_id: &GuildId) -> BobResult<PathBuf> {
@@ -60,7 +57,7 @@ impl BobPreset {
         let gpd = BobPreset::guild_presets_dir(guild_id)?;
 
         let preset_files = read_dir(gpd)
-            .map_err(|_| BobError {msg: "Could not read guild presets directory contents"})?;
+            .map_err(|e| convert_error(e, "Could not read guild presets directory contents"))?;
 
         let mut mapped_files = vec![];
         for preset_file in preset_files {
@@ -78,10 +75,13 @@ impl BobPreset {
         let mut serialized = vec![];
 
         file.read_to_end(&mut serialized)
-            .map_err(|_| BobError {msg: "Could not read preset file contents"})?;
+            .map_err(|e| convert_error(e, "Could not read preset file contents"))?;
 
         toml::from_slice(&serialized)
-            .map_err(|_| BobError {msg: "Could not deserialize preset"})
+            .map_err(|e| {
+                debug!("{:?}", &e);
+                BobError {msg: "Could not deserialize preset"}
+            })
     }
 
     /// Read the [BobPreset] for the given guild and name.
@@ -89,7 +89,7 @@ impl BobPreset {
         let filename = BobPreset::guild_preset_filename(&guild_id, name)?;
 
         let file = File::open(&filename)
-            .map_err(|_| BobError {msg: "Could not open preset file"})?;
+            .map_err(|e| convert_error(e, "Could not open preset file"))?;
 
         BobPreset::read_file(file)
     }
@@ -97,13 +97,11 @@ impl BobPreset {
     /// Write the [BobPreset] into the given file.
     pub fn write_file(&self, mut file: File) -> BobResult<()> {
         let serialized = toml::to_string(&self)
-            .map_err(|_| BobError {msg: "Could not serialize preset"})?
+            .map_err(|e| convert_error(e, "Could not serialize preset"))?
             .into_bytes();
 
         file.write_all(&serialized)
-            .map_err(|_| BobError {msg: "Could not write preset file"})?;
-
-        Ok(())
+            .map_err(|e| convert_error(e, "Could not write preset file"))
     }
 
     /// Write the given [BobPreset] for the given guild and name.
@@ -111,13 +109,11 @@ impl BobPreset {
         let filename = BobPreset::guild_preset_filename(&guild_id, preset_name)?;
 
         create_dir_all(filename.clone().parent().unwrap())
-            .map_err(|_| BobError {msg: "Could not create preset directory"});
+            .map_err(|e| convert_error(e, "Could not create preset directory"))?;
 
         let file = File::create(&filename)
-            .map_err(|_| BobError {msg: "Could not create preset file"})?;
+            .map_err(|e| convert_error(e, "Could not create preset file"))?;
 
-        debug!("Writing guild preset {} of <G{}>", &preset_name, &guild_id);
-        self.write_file(file)?;
-        Ok(())
+        self.write_file(file)
     }
 }
