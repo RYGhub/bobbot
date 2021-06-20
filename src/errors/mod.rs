@@ -1,32 +1,56 @@
 use std::fmt::{Display, Formatter, Result as FmtResult, Debug};
 use std::error::{Error};
+use indoc::indoc;
 use crate::utils::discord_display::{DiscordDisplay};
 
 
+/// The four possible "causes" of an error:
+/// - `ErrorKind::User`: if an error is caused by a mistake on the bot user's part.
+/// - `ErrorKind::Admin`: if an error is caused by misconfiguration by the Discord server admin.
+/// - `ErrorKind::Host`: if an error is caused by misconfiguration by the bot hosting provider.
+/// - `ErrorKind::Developer`: if an error is caused by a wrong assumption made by the bot developer.
+/// - `ErrorKind::External`: if an error in an external service occurred, and nothing can be done about it.
+#[derive(Debug, Clone)]
 pub enum ErrorKind {
     User,
     Admin,
+    Host,
     Developer,
     External,
 }
 
-#[derive(Debug, Clone)]
+/// A structure describing an error that occurred during the bot's operation.
+///
+/// It must include a [ErrorKind] (`knd`), and may include a message (`msg`) and/or an object implementing [Error]
+/// (`err`).
+#[derive(Debug)]
 pub struct BobError {
-    knd: ErrorKind,
-    msg: Option<String>,
-    err: Option<Box<dyn Error>>,
+    pub knd: ErrorKind,
+    pub msg: Option<String>,
+    pub err: Option<Box<dyn Error>>,
+}
+
+impl BobError {
+    /// Create a new [BobError] given a [ErrorKind] and a message.
+    pub fn from_msg(knd: ErrorKind, msg: &str) -> Self {
+        BobError {
+            knd: knd,
+            msg: Some(String::from(msg)),
+            err: None,
+        }
+    }
 }
 
 impl Display for BobError {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         if self.msg.is_some() && self.err.is_some() {
-            write!(f, "{:?}: {}", &self.err.unwrap(), &self.msg.unwrap())
+            write!(f, "{:?}: {}", &self.err.as_ref().unwrap(), &self.msg.as_ref().unwrap())
         }
         else if self.msg.is_some() {
-            write!(f, "Error: {}", &self.msg.unwrap())
+            write!(f, "Error: {}", &self.msg.as_ref().unwrap())
         }
         else if self.err.is_some() {
-            write!(f, "{:?}: _no message_", &self.err.unwrap())
+            write!(f, "{:?}: _no message_", &self.err.as_ref().unwrap())
         }
         else {
             write!(f, "Error: _no message_")
@@ -41,6 +65,7 @@ impl DiscordDisplay for BobError {
         let emoji = match &self.knd {
             ErrorKind::User      => "⚠️",
             ErrorKind::Admin     => "⛔️",
+            ErrorKind::Host      => "☢️",
             ErrorKind::Developer => "🐛",
             ErrorKind::External  => "🌐",
         };
@@ -51,7 +76,7 @@ impl DiscordDisplay for BobError {
         };
 
         let code = match &self.err {
-            None    => "",
+            None    => format!(""),
             Some(e) => format!("```\n{}\n```", &e)
         };
 
@@ -62,36 +87,33 @@ impl DiscordDisplay for BobError {
     }
 }
 
-impl<T: Error> From<T> for BobError {
-    fn from(err: T) -> Self {
-        BobError {
-            msg: None,
-            err: Some(err),
-            knd: ErrorKind::Developer
-        }
-    }
-}
-
+/// A [Result] that always returns a [BobError] as [Result::Err].
 pub type BobResult<T> = Result<T, BobError>;
 
-pub trait IntoBobError<T> {
-    fn map_bob(self, knd: ErrorKind, msg: &str) -> BobResult<T>;
+/// A [BobResult] that always returns an empty tuple `()`.
+pub type CheckResult = BobResult<()>;
+
+
+/// A trait denoting that an object can be converted in a [BobResult] with a certain [ErrorKind] and message.
+///
+/// Implemented for [Result] and [Option].
+pub trait BobCatch<T> {
+    /// Convert the current object into a [BobResult] with the specified [ErrorKind] and message.
+    fn bob_catch(self, knd: ErrorKind, msg: &str) -> BobResult<T>;
 }
 
-impl<T, E> IntoBobError<T> for Result<T, E> {
-    fn map_bob(self, knd: ErrorKind, msg: &str) -> BobResult<T> {
-        self.map_err(|err|
-            BobError {
-                knd: knd,
-                err: Some(err),
-                msg: Some(String::from(msg))
-            }
-        )
+impl<T, E: Error> BobCatch<T> for Result<T, E> {
+    fn bob_catch(self, knd: ErrorKind, msg: &str) -> BobResult<T> {
+        self.map_err(|err| BobError {
+            knd: knd,
+            err: Some(Box::from(err)),
+            msg: Some(String::from(msg))
+        })
     }
 }
 
-impl<T> IntoBobError<T> for Option<T> {
-    fn map_bob(self, knd: ErrorKind, msg: &str) -> BobResult<T> {
+impl<T> BobCatch<T> for Option<T> {
+    fn bob_catch(self, knd: ErrorKind, msg: &str) -> BobResult<T> {
         self.ok_or_else(||
             BobError {
                 knd: knd,

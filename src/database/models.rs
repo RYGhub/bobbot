@@ -1,4 +1,4 @@
-//! This crate contains the database ORM models.
+//! This module contains the database ORM models.
 //!
 //! # Pain and suffering
 //!
@@ -9,7 +9,7 @@ use std::env::{var};
 use std::time::{Duration};
 use diesel::prelude::*;
 use serenity::model::prelude::{ChannelId, GuildId, GuildChannel};
-use crate::errors::{BobResult, bot_error};
+use crate::errors::{BobResult, BobCatch, ErrorKind};
 use crate::database::schema::{command_channels, deletion_times, channels_created};
 use crate::database::convert::{BobFrom};
 
@@ -52,7 +52,7 @@ impl CommandChannel {
             .filter(guild_id.eq(gid))
             .limit(1)
             .load::<CommandChannel>(&connect())
-            .map_err(bot_error)?;
+            .bob_catch(ErrorKind::External, "Couldn't retrieve Command Channel information from the database.")?;
 
         match results.len() {
             0 => Ok(None),
@@ -68,7 +68,7 @@ impl CommandChannel {
             let result = diesel::update(command_channels.find(cc.guild_id))
                 .set(channel_id.eq(cid))
                 .get_result::<CommandChannel>(&connect())
-                .map_err(bot_error)?;
+                .bob_catch(ErrorKind::External, "Couldn't edit Command Channel information in the database.")?;
 
             return Ok(DatabaseAction::Updated(result));
         }
@@ -81,7 +81,7 @@ impl CommandChannel {
             let result = diesel::insert_into(command_channels)
                 .values(&cc)
                 .get_result::<CommandChannel>(&connect())
-                .map_err(bot_error)?;
+                .bob_catch(ErrorKind::External, "Couldn't edit Command Channel information in the database.")?;
 
             return Ok(DatabaseAction::Created(result));
         }
@@ -96,7 +96,8 @@ impl CommandChannel {
                 Ok(DatabaseAction::None)
             },
             Some(cc) => {
-                diesel::delete(command_channels.find(cc.guild_id)).execute(&connect())?;
+                diesel::delete(command_channels.find(cc.guild_id)).execute(&connect())
+                    .bob_catch(ErrorKind::Host, "Couldn't unset Command Channel in the database.")?;
                 Ok(DatabaseAction::Deleted)
             },
         }
@@ -108,13 +109,13 @@ pub trait WithCommandChannel {
     fn get_command_channel(&self) -> BobResult<Option<ChannelId>>;
 
     /// Set the command [ChannelId] for the given [GuildId].
-    fn set_command_channel(&self, cid: &ChannelId) -> BobResult<DatabaseAction<CommandChannel>>;
+    fn set_command_channel(&self, cid: ChannelId) -> BobResult<DatabaseAction<CommandChannel>>;
 
     /// Unset the command channel for the given [GuildId].
     fn unset_command_channel(&self) -> BobResult<DatabaseAction<CommandChannel>>;
 
     /// Either set or unset the command channel for the given [GuildId].
-    fn edit_command_channel(&self, cid: &Option<ChannelId>) -> BobResult<DatabaseAction<CommandChannel>>;
+    fn edit_command_channel(&self, cid: Option<ChannelId>) -> BobResult<DatabaseAction<CommandChannel>>;
 }
 
 impl WithCommandChannel for GuildId {
@@ -141,9 +142,9 @@ impl WithCommandChannel for GuildId {
     }
 
     fn edit_command_channel(&self, cid: Option<ChannelId>) -> BobResult<DatabaseAction<CommandChannel>> {
-        match &cid {
-            Some(cid) => CommandChannel::set(&self, &cid),
-            None => CommandChannel::unset(&self),
+        match cid {
+            Some(cid) => self.set_command_channel(cid),
+            None => self.unset_command_channel(),
         }
     }
 }
@@ -166,7 +167,7 @@ impl DeletionTime {
             .filter(guild_id.eq(gid))
             .limit(1)
             .load::<DeletionTime>(&connect())
-            .map_err(bot_error)?;
+            .bob_catch(ErrorKind::External, "Couldn't retrieve Deletion Time information from the database.")?;
 
         match results.len() {
             0 => Ok(None),
@@ -182,7 +183,7 @@ impl DeletionTime {
             let result = diesel::update(deletion_times.find(dt.guild_id))
                 .set(deletion_time.eq(time))
                 .get_result::<DeletionTime>(&connect())
-                .map_err(bot_error)?;
+                .bob_catch(ErrorKind::External, "Couldn't edit Deletion Time information in the database.")?;
 
             return Ok(DatabaseAction::Updated(result));
         }
@@ -195,7 +196,7 @@ impl DeletionTime {
             let result = diesel::insert_into(deletion_times)
                 .values(&dt)
                 .get_result::<DeletionTime>(&connect())
-                .map_err(bot_error)?;
+                .bob_catch(ErrorKind::External, "Couldn't edit Deletion Time information in the database.")?;
 
             return Ok(DatabaseAction::Created(result));
         }
@@ -210,7 +211,8 @@ impl DeletionTime {
                 Ok(DatabaseAction::None)
             },
             Some(dt) => {
-                diesel::delete(deletion_times.find(dt.guild_id)).execute(&connect())?;
+                diesel::delete(deletion_times.find(dt.guild_id)).execute(&connect())
+                    .bob_catch(ErrorKind::External, "Couldn't delete Deletion Time information in the database.")?;
                 Ok(DatabaseAction::Deleted)
             },
         }
@@ -222,13 +224,13 @@ pub trait WithDeletionTime {
     fn get_deletion_time(&self) -> BobResult<Option<Duration>>;
 
     /// Set the deletion time for the given [GuildId].
-    fn set_deletion_time(&self, time: &Duration) -> BobResult<DatabaseAction<DeletionTime>>;
+    fn set_deletion_time(&self, time: Duration) -> BobResult<DatabaseAction<DeletionTime>>;
 
     /// Unset the deletion time for the given [GuildId].
     fn unset_deletion_time(&self) -> BobResult<DatabaseAction<DeletionTime>>;
 
     /// Either set or unset the deletion time for the given [GuildId].
-    fn edit_deletion_time(&self, cid: &Option<ChannelId>) -> BobResult<DatabaseAction<DeletionTime>>;
+    fn edit_deletion_time(&self, cid: Option<Duration>) -> BobResult<DatabaseAction<DeletionTime>>;
 }
 
 impl WithDeletionTime for GuildId {
@@ -254,10 +256,10 @@ impl WithDeletionTime for GuildId {
         DeletionTime::unset_raw(gid)
     }
 
-    fn edit_deletion_time(&self, cid: &Option<ChannelId>) -> BobResult<DatabaseAction<DeletionTime>> {
-        match &cid {
-            Some(cid) => DeletionTime::set(&self, &cid),
-            None => DeletionTime::unset(&self),
+    fn edit_deletion_time(&self, duration: Option<Duration>) -> BobResult<DatabaseAction<DeletionTime>> {
+        match duration {
+            Some(duration) => self.set_deletion_time(duration),
+            None => self.unset_deletion_time(),
         }
     }
 }
@@ -277,11 +279,11 @@ impl CreatedChannel {
         channels_created
             .filter(guild_id.eq(gid))
             .load::<CreatedChannel>(&connect())
-            .map_err(bot_error)
+            .bob_catch(ErrorKind::External, "Couldn't retrieve Created Channels from the database.")
     }
 
     fn get_all_less_raw(gid: i64) -> BobResult<Vec<i64>> {
-        CreatedChannel::get_all_raw(gid)?.iter().map(|v| v.channel_id).collect()
+        Ok(CreatedChannel::get_all_raw(gid)?.iter().map(|v| v.channel_id).collect())
     }
 
     fn get_raw(gid: i64, cid: i64) -> BobResult<Option<CreatedChannel>> {
@@ -289,11 +291,10 @@ impl CreatedChannel {
 
         let mut results =
             channels_created
-                .filter(guild_id.eq(gid))
-                .and_filter(channel_id.eq(cid))
+                .filter(guild_id.eq(gid).and(channel_id.eq(cid)))
                 .limit(1)
                 .load::<CreatedChannel>(&connect())
-                .map_err(bot_error)?;
+                .bob_catch(ErrorKind::External, "Couldn't retrieve Created Channels from the database.")?;
 
         match results.len() {
             0 => Ok(None),
@@ -314,7 +315,7 @@ impl CreatedChannel {
                 diesel::insert_into(channels_created)
                     .values(&cc)
                     .get_result::<CreatedChannel>(&connect())
-                    .map_err(bot_error)
+                    .bob_catch(ErrorKind::External, "Couldn't add a new Created Channel into the database.")
             }
         }
     }
@@ -326,7 +327,7 @@ pub trait MayHaveBeenCreatedByBob {
 
 impl MayHaveBeenCreatedByBob for GuildChannel {
     fn was_created_by_bob(&self) -> BobResult<bool> {
-        match CreatedChannel::get_raw(i64::bobfrom(self.guild_id)?, i64::bobfrom(self.id.0)?)? {
+        match CreatedChannel::get_raw(i64::bobfrom(self.guild_id)?, i64::bobfrom(self.id)?)? {
             None => Ok(false),
             Some(_) => Ok(true),
         }

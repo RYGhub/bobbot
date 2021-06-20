@@ -62,3 +62,6 @@ version = "^0.15.0"
 
 [dependencies.indoc]
 version = "^1.0.3"
+
+[dependencies.async-trait]
+version = "^0.1.50"

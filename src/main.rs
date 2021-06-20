@@ -1,3 +1,5 @@
+#![warn(missing_docs)]
+
 extern crate pretty_env_logger;
 extern crate dotenv;
 #[macro_use] extern crate log;
@@ -9,6 +11,7 @@ mod database;
 mod errors;
 mod args;
 mod utils;
+mod extensions;
 
 use std::env;
 use serenity;
@@ -35,10 +38,9 @@ impl EventHandler for BobHandler {
         debug!("Received a VoiceState update: {:?} {:?} {:?}", &gid, &old_vs, &new_vs);
 
         debug!("Starting clean task");
-        match task_clean(&ctx, &gid, &old_vs, &new_vs).await {
-            None => debug!("Nothing to clean"),
-            Some(_) => debug!("Channel cleaned")
-        }
+        match task_clean(&ctx, &old_vs, &new_vs).await {
+            Err(e) => warn!("{}", e)
+        };
     }
 }
 

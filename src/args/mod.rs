@@ -1,39 +1,31 @@
+//! This module contains utilities to easily parse Bob-specific command arguments.
+
 use serenity::framework::standard::{Args};
-use once_cell::sync::{Lazy};
-use regex::{Regex};
-use crate::errors::{BobResult, user_error};
-use std::cmp::min;
+use crate::utils::channel_names::{channelify};
+use crate::errors::*;
 
-/// Convert a string to an acceptable channel name by limiting it to 32 characters and by using  `kebab-lower-case`.
-pub fn channelify(s: &str) -> String {
-    static REPLACE_PATTERN: Lazy<Regex> = Lazy::new(|| {
-        Regex::new("[^a-z0-9]")
-            .expect("Invalid REPLACE_PATTERN")
-    });
 
-    let s = &s[..min(s.len(), 32)];
-    let s = s.to_ascii_lowercase();
-    let s: String = (*REPLACE_PATTERN).replace_all(&s, " ").into_owned();
-    let s = s.trim();
-    let s = s.replace(" ", "-");
+/// This trait extends [Args] with additional methods to allow the parsing of some Bob-specific objects.
+pub trait BobArgs {
+    /// Parse a single argument as a preset name.
+    fn preset_name(&mut self) -> BobResult<String>;
 
-    s
+    /// Parse the rest of the args as a channel name, using [channelify].
+    fn channel_name(self) -> BobResult<String>;
 }
 
+impl BobArgs for Args {
+    fn preset_name(&mut self) -> BobResult<String> {
+        self.single()
+            .bob_catch(ErrorKind::User, "Missing preset name.")
+    }
 
-/// Parse a single argument as a preset name.
-pub fn parse_preset_name(args: &mut Args) -> BobResult<String> {
-    args.single()
-        .map_err(|_| user_error("Missing preset name."))
-}
+    fn channel_name(self) -> BobResult<String> {
+        let rest = self.rest();
 
-
-/// Parse the rest of the args as a channel name.
-pub fn parse_channel_name(args: Args) -> BobResult<String> {
-    let rest = args.rest();
-
-    match rest.len() {
-        0 => Err(user_error("Missing channel name.")),
-        _ => Ok(channelify(rest))
+        match rest.len() {
+            0 => Err(BobError::from_msg(ErrorKind::User, "Missing channel name.")),
+            _ => Ok(channelify(rest))
+        }
     }
 }

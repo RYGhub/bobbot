@@ -1,24 +1,25 @@
 use serenity::model::prelude::{Message};
-use crate::database::models::{CommandChannel};
-use crate::errors::{BobResult, user_error, bot_msg_error};
+use crate::database::models::{WithCommandChannel};
+use crate::errors::*;
 
 
 /// Check if the message was sent in the Command Channel.
-pub async fn check_in_command_channel(msg: &Message) -> BobResult<()> {
-    let guild = msg.guild_id
-        .ok_or_else(|| bot_msg_error("Couldn't get guild_id"))?;
+pub async fn check_in_command_channel(msg: &Message) -> CheckResult {
+    let guild_id = msg.guild_id
+        .bob_catch(ErrorKind::External, "Failed to get the id of the current server.")?;
 
-    let cc_opt = CommandChannel::get(&guild.id)?;
+    let cc_id = guild_id.get_command_channel()
+        .bob_catch(ErrorKind::External, "Failed to get the id of the command channel.")?
+        .bob_catch(ErrorKind::User, "This server has not yet set a Command Channel.")?;
 
-    match cc_opt {
-        None => {
-            Err(user_error("This server has not yet set a Command Channel."))
-        },
-        Some(cc_id) => {
-            match msg.channel_id == cc_id {
-                true => Ok(()),
-                false => Err(user_error("This message was not sent in the Command Channel."))
+    match msg.channel_id == cc_id {
+        true => Ok(()),
+        false => Err(
+            BobError {
+                knd: ErrorKind::User,
+                msg: Some(String::from("This message was not sent in the Command Channel.")),
+                err: None
             }
-        },
+        )
     }
 }
