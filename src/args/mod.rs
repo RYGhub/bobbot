@@ -1,21 +1,17 @@
 use serenity::framework::standard::{Args};
 use once_cell::sync::{Lazy};
 use regex::{Regex};
-use crate::basics::result::{BobResult, convert_error, BobError};
+use crate::errors::{BobResult, user_error};
+use std::cmp::min;
 
-/// Convert a string to an acceptable channel name using `kebab-lower-case`.
+/// Convert a string to an acceptable channel name by limiting it to 32 characters and by using  `kebab-lower-case`.
 pub fn channelify(s: &str) -> String {
     static REPLACE_PATTERN: Lazy<Regex> = Lazy::new(|| {
         Regex::new("[^a-z0-9]")
             .expect("Invalid REPLACE_PATTERN")
     });
 
-    let mut last = s.len();
-    if last > 32 {
-        last = 32;
-    }
-
-    let s = &s[..last];
+    let s = &s[..min(s.len(), 32)];
     let s = s.to_ascii_lowercase();
     let s: String = (*REPLACE_PATTERN).replace_all(&s, " ").into_owned();
     let s = s.trim();
@@ -28,7 +24,7 @@ pub fn channelify(s: &str) -> String {
 /// Parse a single argument as a preset name.
 pub fn parse_preset_name(args: &mut Args) -> BobResult<String> {
     args.single()
-        .map_err(|e| convert_error(e, "Missing preset name argument"))
+        .map_err(|_| user_error("Missing preset name."))
 }
 
 
@@ -36,9 +32,8 @@ pub fn parse_preset_name(args: &mut Args) -> BobResult<String> {
 pub fn parse_channel_name(args: Args) -> BobResult<String> {
     let rest = args.rest();
 
-    if rest.len() == 0 {
-        return Err(BobError {msg: "Missing channel name argument"})
+    match rest.len() {
+        0 => Err(user_error("Missing channel name.")),
+        _ => Ok(channelify(rest))
     }
-
-    Ok(channelify(rest))
 }

@@ -1,6 +1,6 @@
 use serenity::model::prelude::{Guild, UserId, VoiceState, GuildChannel, ChannelId};
 use serenity::http::{Http};
-use crate::basics::result::{BobResult, BobError, convert_error};
+use crate::basics::result::{BobResult, result_error, option_error};
 
 
 /// Get a reference to the [VoiceState] of an user.
@@ -21,13 +21,13 @@ pub async fn get_voice_channel(http: &Http, guild: &Guild, user_id: &UserId) -> 
     }
 
     let channel_id = voice_state.unwrap().channel_id
-        .ok_or(BobError {msg: "Couldn't get channel id of user's voice state"})?;
+        .ok_or_else(|| option_error("Couldn't get channel id of user's voice state"))?;
 
     let channel = channel_id.to_channel(&http).await
-        .map_err(|e| convert_error(e, "Couldn't get channel information of user's voice state"))?;
+        .map_err(|e| result_error(e, "Couldn't get channel information of user's voice state"))?;
 
     let guild_channel = channel.guild()
-        .ok_or(BobError {msg: "Voice state channel wasn't a GuildChannel"})?;
+        .ok_or_else(|| option_error("Voice state channel wasn't a GuildChannel"))?;
 
     Ok(Some(guild_channel))
 }
@@ -40,7 +40,7 @@ pub async fn move_member(http: &Http, guild: &Guild, user_id: &UserId, channel_i
         user_id.clone(),
         channel_id.clone(),
     ).await.map_or_else(
-        |_| Err(BobError {msg: "Couldn't move member"}),
+        |_| Err(option_error("Couldn't move member")),
         |_| Ok(()),
     )
 }

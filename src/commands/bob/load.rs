@@ -3,7 +3,7 @@ use serenity::model::prelude::*;
 use serenity::framework::standard::*;
 use serenity::framework::standard::macros::*;
 
-use crate::basics::command::{get_guild, get_channel, broadcast_typing, get_permows_with_preset};
+use crate::basics::command::{get_guild, get_channel, broadcast_typing, get_permows_with_preset, reply};
 use crate::basics::channel::{get_category, create};
 use crate::basics::args::{parse_preset_name, parse_channel_name};
 use crate::basics::presets::BobPreset;
@@ -39,11 +39,8 @@ pub async fn load(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult
 
     move_member(&ctx.http, &guild, &msg.author.id, &created.id).await?;
 
-    info!("Successfully built channel #{} for {}#{} with preset {}!",
-          &created.name, &msg.author.name, &msg.author.discriminator, &preset_name);
-
-    msg.reply(
-        &ctx.http,
+    reply(
+        &ctx.http, &msg,
         format!(
             "🔨 Built channel {} with owner {} from preset `{}`!",
             &created.mention(),

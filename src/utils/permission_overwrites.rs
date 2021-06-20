@@ -1,10 +1,13 @@
-use serenity::model::prelude::{PermissionOverwriteType, PermissionOverwrite, Permissions, UserId, ChannelCategory, GuildChannel};
+use serenity::model::prelude::{PermissionOverwriteType, PermissionOverwrite, Permissions, UserId};
+
+
+const ALL_VOICE_PERMISSIONS: u64 = 298845201;
 
 
 /// Create a [PermissionOverwrite] which allows all [Permissions].
 pub fn allow_all(kind: PermissionOverwriteType) -> PermissionOverwrite {
     PermissionOverwrite {
-        allow: Permissions::from_bits(298845201).unwrap(),
+        allow: Permissions::from_bits(ALL_VOICE_PERMISSIONS).unwrap(),
         deny: Permissions::empty(),
         kind,
     }
@@ -15,7 +18,7 @@ pub fn allow_all(kind: PermissionOverwriteType) -> PermissionOverwrite {
 pub fn deny_all(kind: PermissionOverwriteType) -> PermissionOverwrite {
     PermissionOverwrite {
         allow: Permissions::all(),
-        deny: Permissions::from_bits(298845201).unwrap(),
+        deny: Permissions::from_bits(ALL_VOICE_PERMISSIONS).unwrap(),
         kind,
     }
 }
@@ -34,16 +37,4 @@ pub fn empty(kind: PermissionOverwriteType) -> PermissionOverwrite {
 /// Create a [PermissionOverwrite] which allows all [Permissions] for the given [UserId].
 pub fn owner(user_id: UserId) -> PermissionOverwrite {
     allow_all(PermissionOverwriteType::Member(user_id))
-}
-
-
-/// Clone the [PermissionOverwrite]s of a [ChannelCategory].
-pub fn clone_from_category(category: &ChannelCategory) -> Vec<PermissionOverwrite> {
-    category.permission_overwrites.clone()
-}
-
-
-/// Clone the [PermissionOverwrite]s of a [GuildChannel].
-pub fn clone_from_guildchannel(channel: &GuildChannel) -> Vec<PermissionOverwrite> {
-    channel.permission_overwrites.clone()
 }

@@ -48,3 +48,17 @@ features = [
 
 [dependencies.num-traits]
 version = "^0.2.14"
+
+[dependencies.diesel]
+version = "^1.4.4"
+features = [
+    "postgres",
+    "32-column-tables",
+    "numeric",
+]
+
+[dependencies.dotenv]
+version = "^0.15.0"
+
+[dependencies.indoc]
+version = "^1.0.3"

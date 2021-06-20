@@ -3,7 +3,7 @@ use serenity::model::prelude::*;
 use serenity::framework::standard::*;
 use serenity::framework::standard::macros::*;
 
-use crate::basics::command::{get_guild, get_channel, broadcast_typing, get_permows};
+use crate::basics::command::{get_guild, get_channel, broadcast_typing, get_permows, reply};
 use crate::basics::channel::{get_category, create};
 use crate::basics::voice::{move_member};
 use crate::basics::args::{parse_channel_name};
@@ -35,8 +35,8 @@ pub async fn build(ctx: &Context, msg: &Message, args: Args) -> CommandResult {
 
     move_member(&ctx.http, &guild, &msg.author.id, &created.id).await?;
 
-    msg.channel_id.say(
-        &ctx.http,
+    reply(
+        &ctx.http, &msg,
         format!(
             "🔨 Built channel {} with owner {}!",
             &created.mention(),

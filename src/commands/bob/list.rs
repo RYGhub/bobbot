@@ -3,7 +3,7 @@ use serenity::model::prelude::*;
 use serenity::framework::standard::*;
 use serenity::framework::standard::macros::*;
 
-use crate::basics::command::{get_guild, broadcast_typing, get_channel};
+use crate::basics::command::{get_guild, broadcast_typing, get_channel, reply};
 use crate::basics::presets::BobPreset;
 
 
@@ -24,8 +24,8 @@ pub async fn list(ctx: &Context, msg: &Message, _args: Args) -> CommandResult {
         })
         .collect();
 
-    msg.reply(
-        &ctx.http,
+    reply(
+        &ctx.http, &msg,
         format!(
             "🗒 The following presets are available in **{}**:\n{}", &guild.name, &presets
         )

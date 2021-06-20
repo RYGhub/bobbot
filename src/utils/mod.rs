@@ -1,1 +1,2 @@
-pub mod clear_temp_channel;
+pub mod permission_overwrites;
+pub mod discord_display;
