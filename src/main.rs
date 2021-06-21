@@ -34,12 +34,13 @@ impl EventHandler for BobHandler {
     }
 
     /// Called when the voice state of an user changes.
-    async fn voice_state_update(&self, ctx: Context, gid: Option<GuildId>, old_vs: Option<VoiceState>, new_vs: VoiceState) {
-        debug!("Received a VoiceState update: {:?} {:?} {:?}", &gid, &old_vs, &new_vs);
+    async fn voice_state_update(&self, ctx: Context, _gid: Option<GuildId>, old_vs: Option<VoiceState>, new_vs: VoiceState) {
+        debug!("Received a VoiceState update");
 
         debug!("Starting clean task");
         match task_clean(&ctx, &old_vs, &new_vs).await {
-            Err(e) => warn!("{}", e)
+            Err(e) => warn!("{}", e),
+            Ok(_) => {},
         };
     }
 }

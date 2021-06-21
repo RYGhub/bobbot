@@ -26,8 +26,6 @@ pub async fn task_clean(
 )
     -> BobResult<Option<()>>
 {
-    debug!("Running clean task");
-
     match &get_left_channel_id(&old_vs, &new_vs).await {
         None => Ok(None),
         Some(c) => {
@@ -109,7 +107,7 @@ async fn clean_channel<'a>(ctx: &'_ Context, channel: &'a GuildChannel) -> BobRe
         &ctx.http,
         |m| m.content(
                 format!(
-                "🗑 {} was deleted as it was empty.",
+                "🗑 _#{}_ was deleted, as it was empty.",
                 &channel.name,
             )
         )

@@ -102,7 +102,7 @@ pub trait BobCatch<T> {
     fn bob_catch(self, knd: ErrorKind, msg: &str) -> BobResult<T>;
 }
 
-impl<T, E: Error> BobCatch<T> for Result<T, E> {
+impl<T, E: Error + 'static> BobCatch<T> for Result<T, E> {
     fn bob_catch(self, knd: ErrorKind, msg: &str) -> BobResult<T> {
         self.map_err(|err| BobError {
             knd: knd,
