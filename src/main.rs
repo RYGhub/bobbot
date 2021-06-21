@@ -1,3 +1,5 @@
+//! This crate contains the source code of Bob, a [Discord](https://discord.com/) bot that handles temporary channels.
+
 #![warn(missing_docs)]
 
 extern crate pretty_env_logger;
@@ -12,6 +14,7 @@ mod errors;
 mod args;
 mod utils;
 mod extensions;
+mod commands;
 
 use std::env;
 use serenity;
@@ -20,7 +23,8 @@ use serenity::model::prelude::*;
 use serenity::framework::standard::*;
 use serenity::framework::standard::macros::*;
 use dotenv::{dotenv};
-use crate::tasks::clean::task_clean;
+use crate::tasks::clean::maybe_clean;
+use crate::commands::*;
 
 
 struct BobHandler;
@@ -38,7 +42,7 @@ impl EventHandler for BobHandler {
         debug!("Received a VoiceState update");
 
         debug!("Starting clean task");
-        match task_clean(&ctx, &old_vs, &new_vs).await {
+        match maybe_clean(&ctx, &old_vs, &new_vs).await {
             Err(e) => warn!("{}", e),
             Ok(_) => {},
         };
@@ -99,7 +103,7 @@ async fn main() {
                 .configure(|c| c
                     .prefix(&prefix)
                 )
-                // .group(&BOB_GROUP)
+                .group(&BOB_GROUP)
                 .on_dispatch_error(on_error)
         )
         .await

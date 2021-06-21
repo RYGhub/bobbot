@@ -2,3 +2,4 @@
 
 pub mod clean;
 pub mod build;
+pub mod mov;

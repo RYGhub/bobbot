@@ -1,8 +1,9 @@
 //! This module contains a task to build a new channel.
 
-use serenity::model::prelude::{Guild, ChannelCategory, ChannelType, GuildChannel, PermissionOverwrite};
+use serenity::model::prelude::{Guild, ChannelCategory, ChannelType, GuildChannel, PermissionOverwrite, PartialGuild};
 use serenity::prelude::{Context};
 use crate::errors::{BobResult, BobCatch, ErrorKind};
+use crate::database::models::{CreatedChannel, MayHaveBeenCreatedByBob};
 
 
 /// Build a new channel in the specified [`guild`]([Guild]) with the specified `name`.
@@ -24,7 +25,8 @@ use crate::errors::{BobResult, BobCatch, ErrorKind};
 ///
 /// Presets aren't loaded yet.
 ///
-pub async fn task_build(ctx: &Context, guild: &Guild, name: &str, category: &Option<ChannelCategory>, preset_name: Option<&str>) -> BobResult<GuildChannel> {
+pub async fn task_build(ctx: &Context, guild: &PartialGuild, name: &str, category: &Option<ChannelCategory>, preset_name: Option<&str>) -> BobResult<GuildChannel> {
+
     let permissions: Option<Vec<PermissionOverwrite>> = None;
     let bitrate: Option<u32> = None;
     let limit: Option<u32> = None;
@@ -44,6 +46,8 @@ pub async fn task_build(ctx: &Context, guild: &Guild, name: &str, category: &Opt
 
         c
     }).await.bob_catch(ErrorKind::Admin, "Failed to create channel")?;
+
+    created.mark_as_created_by_bob()?;
 
     Ok(created)
 }

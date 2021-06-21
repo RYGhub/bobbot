@@ -33,14 +33,3 @@ pub async fn get_voice_channel(http: &Http, guild: &Guild, user_id: &UserId) -> 
 }
 
 
-/// Move an [UserId] to a voice [ChannelId].
-pub async fn move_member(http: &Http, guild: &Guild, user_id: &UserId, channel_id: &ChannelId) -> BobResult<()> {
-    guild.move_member(
-        &http,
-        user_id.clone(),
-        channel_id.clone(),
-    ).await.map_or_else(
-        |_| Err(option_error("Couldn't move member")),
-        |_| Ok(()),
-    )
-}

@@ -323,6 +323,7 @@ impl CreatedChannel {
 
 pub trait MayHaveBeenCreatedByBob {
     fn was_created_by_bob(&self) -> BobResult<bool>;
+    fn mark_as_created_by_bob(&self) -> BobResult<CreatedChannel>;
 }
 
 impl MayHaveBeenCreatedByBob for GuildChannel {
@@ -331,5 +332,9 @@ impl MayHaveBeenCreatedByBob for GuildChannel {
             None => Ok(false),
             Some(_) => Ok(true),
         }
+    }
+
+    fn mark_as_created_by_bob(&self) -> BobResult<CreatedChannel> {
+        CreatedChannel::put_raw(i64::bobfrom(self.guild_id)?, i64::bobfrom(self.id)?)
     }
 }

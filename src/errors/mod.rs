@@ -2,6 +2,9 @@ use std::fmt::{Display, Formatter, Result as FmtResult, Debug};
 use std::error::{Error};
 use indoc::indoc;
 use crate::utils::discord_display::{DiscordDisplay};
+use serenity::prelude::Context;
+use serenity::model::channel::Message;
+use serenity::http::Http;
 
 
 /// The four possible "causes" of an error:
@@ -27,7 +30,7 @@ pub enum ErrorKind {
 pub struct BobError {
     pub knd: ErrorKind,
     pub msg: Option<String>,
-    pub err: Option<Box<dyn Error>>,
+    pub err: Option<Box<dyn Error + Send + Sync>>,
 }
 
 impl BobError {
@@ -38,6 +41,29 @@ impl BobError {
             msg: Some(String::from(msg)),
             err: None,
         }
+    }
+
+    pub async fn handle(&self, http: &Http, msg: &Message) -> BobResult<Message> {
+        match &self.knd {
+            ErrorKind::User => {
+                debug!("{}", &self);
+            },
+            ErrorKind::Admin => {
+                debug!("{}", &self);
+            },
+            ErrorKind::Host => {
+                error!("{}", &self);
+            },
+            ErrorKind::Developer => {
+                error!("{}", &self);
+            },
+            ErrorKind::External => {
+                warn!("{}", &self);
+            },
+        }
+
+        msg.reply(&http, format!("{}", &self.to_discord())).await
+            .bob_catch(ErrorKind::Admin, "Couldn't handle error")
     }
 }
 
@@ -102,7 +128,7 @@ pub trait BobCatch<T> {
     fn bob_catch(self, knd: ErrorKind, msg: &str) -> BobResult<T>;
 }
 
-impl<T, E: Error + 'static> BobCatch<T> for Result<T, E> {
+impl<T, E: Error + Send + Sync + 'static> BobCatch<T> for Result<T, E> {
     fn bob_catch(self, knd: ErrorKind, msg: &str) -> BobResult<T> {
         self.map_err(|err| BobError {
             knd: knd,

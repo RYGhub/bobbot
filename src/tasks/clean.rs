@@ -11,7 +11,7 @@ use crate::extensions::*;
 
 /// _To be run in a `voice_state_change` event._
 ///
-/// Detect if someone left a voice [GuildChannel] and try to [clean_channel] if there's nobody left inside.
+/// Detect if someone left a voice [GuildChannel] and run [task_clean] if there's nobody left inside.
 ///
 /// # Returns
 ///
@@ -19,7 +19,7 @@ use crate::extensions::*;
 /// - `Ok(Some))` if a channel was deleted.
 /// - `Err(_)` if an error occurred.
 ///
-pub async fn task_clean(
+pub async fn maybe_clean(
     ctx: &Context,
     old_vs: &Option<VoiceState>,
     new_vs: &VoiceState
@@ -30,7 +30,7 @@ pub async fn task_clean(
         None => Ok(None),
         Some(c) => {
             let channel = &c.bob_guild_channel(&ctx.http).await?;
-            let result = clean_channel(&ctx, &channel).await?.map(|_| ());
+            let result = task_clean(&ctx, &channel).await?.map(|_| ());
             Ok(result)
         },
     }
@@ -63,7 +63,7 @@ async fn get_left_channel_id(old: &Option<VoiceState>, new: &VoiceState) -> Opti
 /// - `Err(e)` if an error is encountered while performing the action.
 /// - `Ok(None)` if the channel wasn't deleted.
 /// - `Ok(Some(c))` if the channel was deleted.
-async fn clean_channel<'a>(ctx: &'_ Context, channel: &'a GuildChannel) -> BobResult<Option<&'a GuildChannel>> {
+pub async fn task_clean<'a>(ctx: &'_ Context, channel: &'a GuildChannel) -> BobResult<Option<&'a GuildChannel>> {
     if !channel.was_created_by_bob()? {
         return Ok(None);
     }

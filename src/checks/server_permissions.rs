@@ -6,7 +6,7 @@ use crate::extensions::*;
 
 /// Check if the user who sent the message is an *Administrator* of the server.
 pub async fn check_administrator(ctx: &Context, msg: &Message) -> CheckResult {
-    let guild = msg.bob_guild_id().await?.bob_guild(&ctx.cache).await?;
+    let guild = msg.bob_guild_id().await?.bob_partial_guild(&ctx.http).await?;
 
     let member = guild.bob_member(&ctx.http, msg.author.id.clone()).await?;
     let permissions = member.permissions(&ctx).await

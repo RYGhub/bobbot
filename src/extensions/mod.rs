@@ -14,7 +14,7 @@ pub trait BobMessage {
 
 #[async_trait]
 pub trait BobGuildId {
-    async fn bob_guild(self, cache: &Cache) -> BobResult<Guild>;
+    async fn bob_partial_guild(self, http: &Http) -> BobResult<PartialGuild>;
 }
 
 #[async_trait]
@@ -45,13 +45,24 @@ impl BobMessage for Message {
 
 #[async_trait]
 impl BobGuildId for GuildId {
-    async fn bob_guild(self, cache: &Cache) -> BobResult<Guild> {
+    async fn bob_partial_guild(self, http: &Http) -> BobResult<PartialGuild> {
         self
-            .bob_guild(&cache)
+            .to_partial_guild(&http)
             .await
             .bob_catch(ErrorKind::External, "Couldn't get Guild")
     }
 }
+
+
+#[async_trait]
+impl BobGuild for PartialGuild {
+    async fn bob_member(&self, http: &Http, user_id: UserId) -> BobResult<Member> {
+        self.member(&http, user_id)
+            .await
+            .bob_catch(ErrorKind::Admin, "Couldn't get information about a server member")
+    }
+}
+
 
 #[async_trait]
 impl BobGuild for Guild {
@@ -122,3 +133,5 @@ impl BobGuildChannel for GuildChannel {
             .bob_catch(ErrorKind::External, "Could not fetch channel members")
     }
 }
+
+
