@@ -6,8 +6,9 @@ use crate::tasks::build::task_build;
 use crate::extensions::*;
 use crate::args::{BobArgs};
 use crate::tasks::mov::task_move;
-use crate::errors::{BobResult, ErrorKind};
+use crate::errors::{BobResult, ErrorKind, BobCatch};
 use std::convert::Infallible;
+use crate::tasks::clean::task_clean;
 
 
 #[command]
@@ -39,7 +40,19 @@ async fn true_build(ctx: &Context, msg: &Message, args: Args) -> BobResult<()> {
         .await?;
 
     let channel = task_build(&ctx, &guild, &name, &category, None).await?;
-    task_move(&ctx, &guild, &msg.author.id, &channel.id).await?;
+
+    msg.reply(
+        &ctx.http,
+        format!("🔨 Built temporary voice channel {}!", &channel.mention())
+    );
+
+    match task_move(&ctx, &guild, &msg.author.id, &channel.id).await {
+        Ok(_) => {},
+        Err(e) => {
+            e.handle(&ctx.http, &msg).await?;
+            task_clean(&ctx, &channel).await?;
+        },
+    }
 
     Ok(())
 }
