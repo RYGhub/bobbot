@@ -14,12 +14,18 @@ categories = ["command-line-utilities"]
 
 [dependencies.serenity]
 version = "^0.10.8"
+default-features = false
 features = [
     "cache",
-    "framework",
-    "standard_framework",
     "model",
     "unstable_discord_api",
+    "rustls_backend",
+    "builder",
+    "client",
+    "gateway",
+    "model",
+    "http",
+    "utils",
 ]
 
 [dependencies.once_cell]

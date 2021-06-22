@@ -44,8 +44,28 @@
     <inspection_tool class="RegExpRedundantNestedCharacterClass" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
     <inspection_tool class="RegExpRepeatedSpace" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
     <inspection_tool class="RegExpUnexpectedAnchor" enabled="true" level="ERROR" enabled_by_default="true" />
-    <inspection_tool class="RsFieldInitShorthand" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+    <inspection_tool class="RsArgumentNaming" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsAssocTypeNaming" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsConstNaming" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsEnumNaming" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsEnumVariantNaming" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsExperimentalChecks" enabled="true" level="SERVER PROBLEM" enabled_by_default="true" />
+    <inspection_tool class="RsFieldNaming" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsFunctionNaming" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsLifetimeNaming" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
     <inspection_tool class="RsLift" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+    <inspection_tool class="RsLiveness" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsMacroNaming" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsMethodNaming" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsModuleNaming" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsSelfConvention" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsStaticConstNaming" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsStructNaming" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsTraitNaming" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsTypeAliasNaming" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsTypeParameterNaming" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="RsVariableMutable" enabled="true" level="SERVER PROBLEM" enabled_by_default="true" />
+    <inspection_tool class="RsVariableNaming" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
     <inspection_tool class="ShellCheck" enabled="true" level="WARNING" enabled_by_default="true" />
   </profile>
 </component>

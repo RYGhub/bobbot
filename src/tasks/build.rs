@@ -1,9 +1,9 @@
 //! This module contains a task to build a new channel.
 
-use serenity::model::prelude::{Guild, ChannelCategory, ChannelType, GuildChannel, PermissionOverwrite, PartialGuild};
-use serenity::prelude::{Context};
-use crate::errors::{BobResult, BobCatch, ErrorKind};
-use crate::database::models::{CreatedChannel, MayHaveBeenCreatedByBob};
+use serenity::model::prelude::*;
+use serenity::prelude::*;
+use crate::errors::*;
+use crate::database::models::{MayHaveBeenCreatedByBob};
 
 
 /// Build a new channel in the specified [`guild`]([Guild]) with the specified `name`.
@@ -18,14 +18,21 @@ use crate::database::models::{CreatedChannel, MayHaveBeenCreatedByBob};
 ///
 /// # Returns
 ///
-/// - `Ok(channel)` if the channel creation was successful.
+/// - `Ok(msg)` if the channel creation was successful.
 /// - `Err(_)` if something went wrong in the creation of the channel.
 ///
 /// # To do
 ///
 /// Presets aren't loaded yet.
 ///
-pub async fn task_build(ctx: &Context, guild: &PartialGuild, name: &str, category: &Option<ChannelCategory>, preset_name: Option<&str>) -> BobResult<GuildChannel> {
+pub async fn task_build(ctx: &Context, guild: &PartialGuild, name: &str, category: &Option<ChannelCategory>, preset: &Option<&str>) -> BobResult<GuildChannel> {
+    debug!(
+        "Running task: build | In <G:{}>, build #{} in <C:{}> with preset {}",
+        &guild.name,
+        &name,
+        &category.as_ref().map_or_else(|| "<no category>", |ok| ok.name()),
+        &preset.clone().map_or_else(|| format!("<no preset>"), |ok| format!("'{}'", ok))
+    );
 
     let permissions: Option<Vec<PermissionOverwrite>> = None;
     let bitrate: Option<u32> = None;

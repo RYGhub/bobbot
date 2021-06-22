@@ -1,11 +1,13 @@
 //! This module contains a task to move an user from a voice channel to another.
 
-use serenity::model::prelude::{PartialGuild, UserId, ChannelId, Member};
-use serenity::prelude::{Context};
-use crate::errors::{BobResult, BobCatch, ErrorKind, BobError};
+use serenity::model::prelude::*;
+use serenity::prelude::*;
+use crate::errors::*;
 
 /// Move an [UserId] to a voice [ChannelId].
 pub async fn task_move(ctx: &Context, guild: &PartialGuild, user_id: &UserId, channel_id: &ChannelId) -> BobResult<Member> {
+    debug!("Running task: move | In <G:{}>, move <@{}> to <#{}>", &guild.name, &user_id, &channel_id);
+
     guild.move_member(
         &ctx.http,
         user_id.clone(),

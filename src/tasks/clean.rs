@@ -30,6 +30,11 @@ pub async fn maybe_clean(
         None => Ok(None),
         Some(c) => {
             let channel = &c.bob_guild_channel(&ctx.http).await?;
+
+            if !channel.was_created_by_bob()? {
+                return Ok(None);
+            }
+
             let result = task_clean(&ctx, &channel).await?.map(|_| ());
             Ok(result)
         },
@@ -64,9 +69,7 @@ async fn get_left_channel_id(old: &Option<VoiceState>, new: &VoiceState) -> Opti
 /// - `Ok(None)` if the channel wasn't deleted.
 /// - `Ok(Some(c))` if the channel was deleted.
 pub async fn task_clean<'a>(ctx: &'_ Context, channel: &'a GuildChannel) -> BobResult<Option<&'a GuildChannel>> {
-    if !channel.was_created_by_bob()? {
-        return Ok(None);
-    }
+    debug!("Running task: clean | #{}", &channel.name);
 
     let gid = &channel.guild_id;
     let cc = gid.get_command_channel()?

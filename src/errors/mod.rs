@@ -1,10 +1,9 @@
 use std::fmt::{Display, Formatter, Result as FmtResult, Debug};
 use std::error::{Error};
+use serenity::model::prelude::{Message};
+use serenity::http::Http;
 use indoc::indoc;
 use crate::utils::discord_display::{DiscordDisplay};
-use serenity::prelude::Context;
-use serenity::model::channel::Message;
-use serenity::http::Http;
 
 
 /// The four possible "causes" of an error:
