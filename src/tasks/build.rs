@@ -4,6 +4,7 @@ use serenity::model::prelude::*;
 use serenity::prelude::*;
 use crate::errors::*;
 use crate::database::models::{MayHaveBeenCreatedByBob};
+use crate::utils::permission_overwrites::get_built_channel_permows;
 
 
 /// Build a new channel in the specified [`guild`]([Guild]) with the specified `name`.
@@ -25,7 +26,7 @@ use crate::database::models::{MayHaveBeenCreatedByBob};
 ///
 /// Presets aren't loaded yet.
 ///
-pub async fn task_build(ctx: &Context, guild: &PartialGuild, name: &str, category: &Option<ChannelCategory>, preset: &Option<&str>) -> BobResult<GuildChannel> {
+pub async fn task_build(ctx: &Context, guild: &PartialGuild, name: &str, creator: &Member, category: &Option<ChannelCategory>, preset: &Option<&str>) -> BobResult<GuildChannel> {
     debug!(
         "Running task: build | In <G:{}>, build #{} in <C:{}> with preset {}",
         &guild.name,
@@ -34,7 +35,7 @@ pub async fn task_build(ctx: &Context, guild: &PartialGuild, name: &str, categor
         &preset.clone().map_or_else(|| format!("<no preset>"), |ok| format!("'{}'", ok))
     );
 
-    let permissions: Option<Vec<PermissionOverwrite>> = None;
+    let permissions: Vec<PermissionOverwrite> = get_built_channel_permows(&ctx.cache, &category, creator.user.id.clone()).await;
     let bitrate: Option<u32> = None;
     let limit: Option<u32> = None;
 
@@ -45,7 +46,7 @@ pub async fn task_build(ctx: &Context, guild: &PartialGuild, name: &str, categor
             c.category(cat.id.clone());
         }
 
-        c.permissions(permissions.unwrap_or(vec![]));
+        c.permissions(permissions);
         c.bitrate(bitrate.unwrap_or(64000));
         if let Some(limit) = limit {
             c.user_limit(limit);

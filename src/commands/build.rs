@@ -11,17 +11,17 @@ use crate::utils::channel_names::{Channelizable};
 pub async fn command_build(ctx: &Context, guild_id: &GuildId, channel_id: &ChannelId, member: &Member, data: &ApplicationCommandInteractionData) -> BobResult<String> {
     debug!("Called command: build");
 
-    let guild = guild_id.bob_partial_guild(&ctx.http).await?;
+    let guild = guild_id.ext_partial_guild(&ctx.http).await?;
     let category = channel_id
-        .bob_guild_channel(&ctx.http).await?
-        .bob_category(&ctx.http).await?;
+        .ext_guild_channel(&ctx.http).await?
+        .ext_category(&ctx.http).await?;
 
     let options = data.to_owned().option_hashmap();
-    let name = options.arg_req_string("name")?.channelify();
-    let preset = options.arg_opt_string("preset")?;
+    let name = options.req_string("name")?.channelify();
+    let preset = options.opt_string("preset")?;
 
     let created = task_build(
-        &ctx, &guild, &name, &category,
+        &ctx, &guild, &name, &member, &category,
         &preset.as_ref().map(|s| s.as_str())
     ).await?;
 

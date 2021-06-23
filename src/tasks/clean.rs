@@ -29,7 +29,7 @@ pub async fn maybe_clean(
     match &get_left_channel_id(&old_vs, &new_vs).await {
         None => Ok(None),
         Some(c) => {
-            let channel = &c.bob_guild_channel(&ctx.http).await?;
+            let channel = &c.ext_guild_channel(&ctx.http).await?;
 
             if !channel.was_created_by_bob()? {
                 return Ok(None);
@@ -75,7 +75,7 @@ pub async fn task_clean<'a>(ctx: &'_ Context, channel: &'a GuildChannel) -> BobR
     let cc = gid.get_command_channel()?
         .bob_catch(ErrorKind::Admin, "No command channel has been set in this Server.")?;
 
-    let members_in_channel = channel.bob_members(&ctx.cache).await?;
+    let members_in_channel = channel.ext_members(&ctx.cache).await?;
     if members_in_channel.len() > 0 {
         return Ok(None);
     }
@@ -98,7 +98,7 @@ pub async fn task_clean<'a>(ctx: &'_ Context, channel: &'a GuildChannel) -> BobR
 
     sleep(countdown).await;
 
-    let members_in_channel = channel.bob_members(&ctx.cache).await?;
+    let members_in_channel = channel.ext_members(&ctx.cache).await?;
     if members_in_channel.len() > 0 {
         return Ok(None);
     }
