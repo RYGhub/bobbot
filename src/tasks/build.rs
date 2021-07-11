@@ -4,7 +4,7 @@ use serenity::model::prelude::*;
 use serenity::prelude::*;
 use crate::errors::*;
 use crate::database::models::{MayHaveBeenCreatedByBob};
-use crate::utils::permission_overwrites::get_built_channel_permows;
+use crate::utils::permission_overwrites::ChannelBuilderPermissionOverwrites;
 
 
 /// Build a new channel in the specified [`guild`]([Guild]) with the specified `name`.
@@ -35,7 +35,7 @@ pub async fn task_build(ctx: &Context, guild: &PartialGuild, name: &str, creator
         &preset.clone().map_or_else(|| format!("<no preset>"), |ok| format!("'{}'", ok))
     );
 
-    let permissions: Vec<PermissionOverwrite> = get_built_channel_permows(&ctx.cache, &category, creator.user.id.clone()).await;
+    let permissions = ChannelBuilderPermissionOverwrites::fetch(&ctx, &creator, &category, &preset).await?;
     let bitrate: Option<u32> = None;
     let limit: Option<u32> = None;
 
@@ -46,7 +46,7 @@ pub async fn task_build(ctx: &Context, guild: &PartialGuild, name: &str, creator
             c.category(cat.id.clone());
         }
 
-        c.permissions(permissions);
+        c.permissions(permissions.merge());
         c.bitrate(bitrate.unwrap_or(64000));
         if let Some(limit) = limit {
             c.user_limit(limit);

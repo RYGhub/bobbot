@@ -88,7 +88,7 @@ pub async fn task_clean<'a>(ctx: &'_ Context, channel: &'a GuildChannel) -> BobR
     let mut message = cc.say(
         &ctx.http,
         format!(
-            "🕒 {} will be deleted <t:{}:R> if it will still be empty.",
+            "🕒 {} will be deleted <t:{}:R> if it will still be empty by then.",
             &channel.mention(),
             &time_deletion.duration_since(UNIX_EPOCH)
                 .bob_catch(ErrorKind::Admin, "System time is before the UNIX epoch.")?.as_secs(),

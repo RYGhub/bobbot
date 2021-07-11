@@ -166,9 +166,9 @@ pub trait ApplicationCommandInteractionDataExtension {
     fn option_hashmap(self) -> HashMap<String, Option<ApplicationCommandInteractionDataOptionValue>>;
 }
 
-impl ApplicationCommandInteractionDataExtension for ApplicationCommandInteractionData {
+impl ApplicationCommandInteractionDataExtension for Vec<ApplicationCommandInteractionDataOption> {
     fn option_hashmap(self) -> HashMap<String, Option<ApplicationCommandInteractionDataOptionValue>> {
-        self.options
+        self
             .into_iter()
             .map(|option|
                 (option.name, option.resolved)

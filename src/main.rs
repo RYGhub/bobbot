@@ -22,7 +22,7 @@ use dotenv::{dotenv};
 use crate::errors::*;
 use crate::extensions::*;
 use crate::tasks::clean::maybe_clean;
-use crate::utils::command_router::{route_command_interaction};
+use crate::utils::command_router::{handle_command_interaction};
 use crate::utils::discord_display::DiscordDisplay;
 
 
@@ -42,8 +42,62 @@ impl BobHandler {
             .create_option(|o| o
                 .kind(ApplicationCommandOptionType::String)
                 .name("preset")
-                .description("The preset to use when building the channel")
+                .description("The preset to use to create the channel.")
                 .required(false)
+            )
+        ).await.bob_catch(ErrorKind::Admin, "Couldn't create global command")?;
+
+        ApplicationCommand::create_global_application_command(&ctx.http, |c| c
+            .name("save")
+            .description("Save a new preset.")
+            .create_option(|o| o
+                .kind(ApplicationCommandOptionType::String)
+                .name("preset")
+                .description("The name of the preset to create or overwrite.")
+                .required(true)
+            )
+            .create_option(|o| o
+                .kind(ApplicationCommandOptionType::Channel)
+                .name("template")
+                .description("The channel to base the preset on.")
+                .required(false)
+            )
+        ).await.bob_catch(ErrorKind::Admin, "Couldn't create global command")?;
+
+        ApplicationCommand::create_global_application_command(&ctx.http, |c| c
+            .name("config")
+            .description("Configure the bot.")
+            .create_option(|o| o
+                .kind(ApplicationCommandOptionType::SubCommand)
+                .name("cc")
+                .description("Set the channel where the bot should send messages in.")
+                .create_sub_option(|so| so
+                    .kind(ApplicationCommandOptionType::Channel)
+                    .name("channel")
+                    .description("The text channel where the bot should send messages in.")
+                    .required(true)
+                )
+            )
+            .create_option(|o| o
+                .kind(ApplicationCommandOptionType::SubCommand)
+                .name("dt")
+                .description("Set the time before channel deletion.")
+                .create_sub_option(|so| so
+                    .kind(ApplicationCommandOptionType::Integer)
+                    .name("timeout")
+                    .description("The time before channel deletion.")
+                    .required(true)
+                    .add_int_choice("5 seconds", 5)
+                    .add_int_choice("30 seconds", 30)
+                    .add_int_choice("1 minute", 60)
+                    .add_int_choice("2 minutes", 120)
+                    .add_int_choice("5 minutes", 300)
+                    .add_int_choice("10 minutes", 600)
+                    .add_int_choice("30 minutes", 1800)
+                    .add_int_choice("1 hour", 3600)
+                    .add_int_choice("3 hours", 7200)
+                    .add_int_choice("6 hours", 21600)
+                )
             )
         ).await.bob_catch(ErrorKind::Admin, "Couldn't create global command")?;
 
@@ -64,13 +118,13 @@ impl EventHandler for BobHandler {
         info!("Registering new commands...");
         match self.register_commands(&ctx).await {
             Ok(_) => debug!("Commands registered successfully"),
-            Err(_) => warn!("Failed to register commands"),
+            Err(e) => warn!("Failed to register commands: {}", &e),
         }
         */
 
         match ApplicationCommand::get_global_application_commands(&ctx.http).await {
             Ok(commands) => debug!("Available commands: {:?}", &commands),
-            Err(_) => warn!("Failed to get available commands list"),
+            Err(e) => warn!("Failed to get available commands list: {:?}", &e),
         };
     }
 
@@ -96,7 +150,7 @@ impl EventHandler for BobHandler {
             },
             Some(data) => {
                 if let InteractionData::ApplicationCommand(data) = data {
-                    let content = match route_command_interaction(&ctx, &interaction, &data).await {
+                    let content = match handle_command_interaction(&ctx, &interaction, &data).await {
                         Ok(s) => s,
                         Err(e) => e.to_discord(),
                     };

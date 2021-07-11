@@ -1,11 +1,13 @@
 use serenity::prelude::Context;
+use serenity::model::prelude::*;
 use serenity::model::interactions::{Interaction, ApplicationCommandInteractionData};
 use crate::commands::build::command_build;
+use crate::commands::config::{command_config_cc, command_config_dt};
 use crate::errors::{BobCatch, ErrorKind, BobError, BobResult};
-use serenity::model::prelude::{GuildId, ChannelId, User};
+use crate::extensions::ApplicationCommandInteractionDataExtension;
 
 
-pub async fn route_command_interaction(ctx: &Context, interaction: &Interaction, data: &ApplicationCommandInteractionData) -> BobResult<String> {
+pub async fn handle_command_interaction(ctx: &Context, interaction: &Interaction, data: &ApplicationCommandInteractionData) -> BobResult<String> {
     let guild_id = &interaction.guild_id.as_ref()
         .bob_catch(ErrorKind::Developer, "Interaction has no GuildId")?;
 
@@ -15,9 +17,28 @@ pub async fn route_command_interaction(ctx: &Context, interaction: &Interaction,
     let member = &interaction.member.as_ref()
         .bob_catch(ErrorKind::Developer, "Interaction has no member")?;
 
+    route_command_interaction(&ctx, &guild_id, &channel_id, &member, &data).await
+}
+
+
+pub async fn route_command_interaction(ctx: &Context, guild_id: &GuildId, channel_id: &ChannelId, member: &Member, data: &ApplicationCommandInteractionData) -> BobResult<String> {
     match data.name.as_str() {
-        "build" => command_build(&ctx, &guild_id, &channel_id, &member, &data).await,
-        _       => command_invalid().await,
+        "build"  => command_build(&ctx, &guild_id, &channel_id, &member, &data).await,
+        "save"   => Ok(String::from("todo")),
+        "config" => route_config(&ctx, &guild_id, &channel_id, &member, &data).await,
+        _        => command_invalid().await,
+    }
+}
+
+
+pub async fn route_config(ctx: &Context, guild_id: &GuildId, channel_id: &ChannelId, member: &Member, data: &ApplicationCommandInteractionData) -> BobResult<String> {
+    let option = data.options.get(0)
+        .bob_catch(ErrorKind::Developer, "First interaction option isn't SubCommand")?;
+
+    match option.name.as_str() {
+        "cc" => command_config_cc(&ctx, &guild_id, &channel_id, &member, &option.options).await,
+        "dt" => command_config_dt(&ctx, &guild_id, &channel_id, &member, &option.options).await,
+        _    => command_invalid().await
     }
 }
 
