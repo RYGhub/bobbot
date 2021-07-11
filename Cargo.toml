@@ -61,7 +61,11 @@ features = [
     "postgres",
     "32-column-tables",
     "numeric",
+    "serde_json",
 ]
+
+[dependencies.serde_json]
+version = "^1.0.64"
 
 [dependencies.dotenv]
 version = "^0.15.0"

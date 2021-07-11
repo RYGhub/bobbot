@@ -8,9 +8,12 @@
 use std::env::{var};
 use std::time::{Duration};
 use diesel::prelude::*;
-use serenity::model::prelude::{ChannelId, GuildId, GuildChannel};
-use crate::errors::{BobResult, BobCatch, ErrorKind};
-use crate::database::schema::{command_channels, deletion_times, channels_created};
+use serenity::model::prelude::{ChannelId, GuildId, GuildChannel, ChannelType};
+use serenity::model::channel::{PermissionOverwrite, PartialChannel};
+use serde::{Serialize, Deserialize};
+use serde_json;
+use crate::errors::{BobResult, BobCatch, ErrorKind, BobError};
+use crate::database::schema::{command_channels, deletion_times, channels_created, presets};
 use crate::database::convert::{BobFrom};
 
 
@@ -337,4 +340,110 @@ impl MayHaveBeenCreatedByBob for GuildChannel {
     fn mark_as_created_by_bob(&self) -> BobResult<CreatedChannel> {
         CreatedChannel::put_raw(i64::bobfrom(self.guild_id)?, i64::bobfrom(self.id)?)
     }
+}
+
+
+#[derive(Queryable, Insertable)]
+#[table_name="presets"]
+pub struct Preset {
+    guild_id: i64,
+    preset_name: String,
+    preset_data: serde_json::Value,
+}
+
+
+impl Preset {
+    fn get_all_raw(gid: i64) -> BobResult<Vec<Preset>> {
+        use crate::database::schema::presets::dsl::*;
+
+        presets
+            .filter(guild_id.eq(gid))
+            .load::<Preset>(&connect())
+            .bob_catch(ErrorKind::External, "Couldn't retrieve Presets from the database.")
+    }
+
+    fn get_raw(gid: i64, name: &str) -> BobResult<Option<Preset>> {
+        use crate::database::schema::presets::dsl::*;
+
+        let mut results =
+            presets
+                .filter(guild_id.eq(gid).and(preset_name.eq(name)))
+                .limit(1)
+                .load::<Preset>(&connect())
+                .bob_catch(ErrorKind::External, "Couldn't retrieve Presets from the database.")?;
+
+        match results.len() {
+            0 => Ok(None),
+            _ => Ok(Some(results.swap_remove(0)))
+        }
+    }
+
+    fn save_raw(gid: i64, name: String, data: PresetData, overwrite: bool) -> BobResult<DatabaseAction<Preset>> {
+        use crate::database::schema::presets::dsl::*;
+
+        let data = serde_json::to_value::<PresetData>(data)
+            .bob_catch(ErrorKind::Developer, "Couldn't serialize PresetData.")?;
+
+        match Preset::get_raw(gid, &name)? {
+            Some(pr) => {
+                if !overwrite {
+                    return Ok(DatabaseAction::None)
+                }
+
+                let result = diesel::update(presets.find((pr.guild_id, pr.preset_name)))
+                    .set(preset_data.eq(data))
+                    .get_result::<Preset>(&connect())
+                    .bob_catch(ErrorKind::External, "Couldn't edit Preset in the database.")?;
+
+                Ok(DatabaseAction::Updated(result))
+            },
+            None => {
+                let cc = Preset {
+                    guild_id: gid,
+                    preset_name: name,
+                    preset_data: data,
+                };
+
+                diesel::insert_into(presets)
+                    .values(&cc)
+                    .get_result::<Preset>(&connect())
+                    .bob_catch(ErrorKind::External, "Couldn't add a new Preset into the database.")?;
+
+                Ok(DatabaseAction::Created(cc))
+            }
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PresetData {
+    bitrate: u64,
+    user_limit: Option<u64>,
+    permissions: Vec<PermissionOverwrite>
+}
+
+pub trait IntoPresetData {
+    fn preset_data(self) -> BobResult<PresetData>;
+}
+
+impl IntoPresetData for GuildChannel {
+    fn preset_data(self) -> BobResult<PresetData> {
+        if self.kind != ChannelType::Voice {
+            return Err(BobError::from_msg(ErrorKind::Developer, "Channel is not a voice channel"))
+        }
+
+        Ok(
+            PresetData {
+                bitrate: self.bitrate.bob_catch(ErrorKind::External, "Voice Channel has no bitrate")?,
+                user_limit: self.user_limit,
+                permissions: self.permission_overwrites
+            }
+        )
+    }
+}
+
+
+pub trait MayContainPreset {
+    fn was_created_by_bob(&self) -> BobResult<bool>;
+    fn mark_as_created_by_bob(&self) -> BobResult<CreatedChannel>;
 }
