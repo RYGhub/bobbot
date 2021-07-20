@@ -6,6 +6,7 @@ extern crate pretty_env_logger;
 extern crate dotenv;
 #[macro_use] extern crate log;
 #[macro_use] extern crate diesel;
+#[macro_use] extern crate diesel_migrations;
 
 mod tasks;
 mod checks;
@@ -24,6 +25,10 @@ use crate::extensions::*;
 use crate::tasks::clean::maybe_clean;
 use crate::utils::command_router::{handle_command_interaction};
 use crate::utils::discord_display::DiscordDisplay;
+use crate::database::models::{connect as db_connect, connect};
+
+
+diesel_migrations::embed_migrations!();
 
 
 struct BobHandler;
@@ -60,6 +65,12 @@ impl BobHandler {
                 .kind(ApplicationCommandOptionType::Channel)
                 .name("template")
                 .description("The channel to base the preset on.")
+                .required(true)
+            )
+            .create_option(|o| o
+                .kind(ApplicationCommandOptionType::Boolean)
+                .name("overwrite")
+                .description("If a template with the same name already exists, overwrite it?")
                 .required(false)
             )
         ).await.bob_catch(ErrorKind::Admin, "Couldn't create global command")?;
@@ -114,13 +125,20 @@ impl EventHandler for BobHandler {
 
         info!("{} is ready!", &ready.user.name);
 
-        /*
-        info!("Registering new commands...");
-        match self.register_commands(&ctx).await {
-            Ok(_) => debug!("Commands registered successfully"),
-            Err(e) => warn!("Failed to register commands: {}", &e),
+        let register_commands = env::var("DISCORD_REGISTER_COMMANDS").is_ok();
+        match register_commands {
+            true => {
+                info!("Registering new commands, DISCORD_REGISTER_COMMANDS is set...");
+                match self.register_commands(&ctx).await {
+                    Ok(_) => debug!("Commands registered successfully"),
+                    Err(e) => warn!("Failed to register commands: {}", &e),
+                }
+                info!("New commands registered, they may take up to an hour to appear.")
+            }
+            false => {
+                info!("Not registering commands, DISCORD_REGISTER_COMMANDS is not set.")
+            }
         }
-        */
 
         match ApplicationCommand::get_global_application_commands(&ctx.http).await {
             Ok(commands) => debug!("Available commands: {:?}", &commands),
@@ -174,7 +192,6 @@ impl EventHandler for BobHandler {
     }
 }
 
-
 /// Initialize and start the bot.
 #[tokio::main]
 async fn main() {
@@ -193,12 +210,25 @@ async fn main() {
     let appid = appid.parse::<u64>()
         .expect("Invalid integer DISCORD_APPID");
 
+    let _ = env::var("DATABASE_URL")
+        .expect("Missing DATABASE_URL");
+
+    info!("Running migrations...");
+    {
+        let connection = db_connect();
+        embedded_migrations::run(&connection);
+    }
+    info!("Successfully ran all migrations.");
+
+
+    debug!("Building client...");
     let mut client = Client::builder(&token)
         .event_handler(BobHandler)
         .application_id(appid)
         .await
         .expect("Error creating Discord client");
 
+    info!("Starting Discord client!");
     client.start_autosharded()
         .await
         .expect("Error starting Discord client");
