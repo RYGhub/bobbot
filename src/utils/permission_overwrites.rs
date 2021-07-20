@@ -4,6 +4,7 @@ use serenity::cache::Cache;
 use serenity::http::Http;
 use crate::errors::*;
 use crate::extensions::*;
+use crate::database::models::{Preset, PresetData};
 
 
 const ALL_VOICE_PERMISSIONS: u64 = 298845201;
@@ -67,7 +68,7 @@ impl ChannelBuilderPermissionOverwrites {
     }
 
     /// Create a [ChannelBuilderPermissionOverwrites] by creating manually the permission overwrites.
-    pub fn build(own_id: UserId, creator_id: UserId, category: Option<ChannelCategory>, preset: Option<()>) -> Self {
+    pub fn build(own_id: UserId, creator_id: UserId, category: Option<ChannelCategory>, preset: Option<PresetData>) -> Self {
         ChannelBuilderPermissionOverwrites {
             own_permow: owner(own_id),
             creator_permow: owner(creator_id),
@@ -75,16 +76,19 @@ impl ChannelBuilderPermissionOverwrites {
                 Some(category) => category.permission_overwrites,
                 None => vec![],
             },
-            preset_permows: vec![],  // TODO
+            preset_permows: match preset {
+                Some(preset) => preset.permissions,
+                None => vec![],
+            },
         }
     }
 
     /// Create a [ChannelBuilderPermissionOverwrites] by retrieving permission overwrites from some common command structs.
-    pub async fn fetch(ctx: &Context, creator: &Member, category: &Option<ChannelCategory>, preset: &Option<&str>) -> BobResult<Self> {
-        let own_id = ctx.cache.current_user().await.id.clone();
-        let creator_id = creator.user.id.clone();
-        let category = category.clone();
-        let preset = None;
+    pub async fn fetch(ctx: &Context, creator: &Member, category: &Option<ChannelCategory>, preset: Option<PresetData>) -> BobResult<Self> {
+        let own_id = ctx.cache.current_user().await.id.to_owned();
+        let creator_id = creator.user.id.to_owned();
+        let category = category.to_owned();
+        let preset = preset; // FIXME: This can't be converted into owned for some weird reason?
 
         Ok(ChannelBuilderPermissionOverwrites::build(own_id, creator_id, category, preset))
     }

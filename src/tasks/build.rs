@@ -3,7 +3,7 @@
 use serenity::model::prelude::*;
 use serenity::prelude::*;
 use crate::errors::*;
-use crate::database::models::{MayHaveBeenCreatedByBob};
+use crate::database::models::{MayHaveBeenCreatedByBob, Preset, CanGetPresetData};
 use crate::utils::permission_overwrites::ChannelBuilderPermissionOverwrites;
 
 
@@ -35,7 +35,11 @@ pub async fn task_build(ctx: &Context, guild: &PartialGuild, name: &str, creator
         &preset.clone().map_or_else(|| format!("<no preset>"), |ok| format!("'{}'", ok))
     );
 
-    let permissions = ChannelBuilderPermissionOverwrites::fetch(&ctx, &creator, &category, &preset).await?;
+    let preset = match preset {
+        Some(preset) => Some(guild.id.get_preset_data(preset)?.bob_catch(ErrorKind::User, "No such preset.")?),
+        None => None
+    };
+    let permissions = ChannelBuilderPermissionOverwrites::fetch(&ctx, &creator, &category, preset).await?;
     let bitrate: Option<u32> = None;
     let limit: Option<u32> = None;
 

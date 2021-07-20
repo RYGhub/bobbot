@@ -120,10 +120,7 @@ impl EventHandler for BobHandler {
 
         info!("{} is ready!", &ready.user.name);
 
-        let register_commands = env::var("DISCORD_REGISTER_COMMANDS").map_or_else(
-            || false,
-            |_| true
-        );
+        let register_commands = env::var("DISCORD_REGISTER_COMMANDS").is_ok();
         match register_commands {
             true => {
                 info!("Registering new commands, DISCORD_REGISTER_COMMANDS is set...");
@@ -208,6 +205,9 @@ async fn main() {
         .expect("Missing DISCORD_APPID");
     let appid = appid.parse::<u64>()
         .expect("Invalid integer DISCORD_APPID");
+
+    let _ = env::var("DATABASE_URL")
+        .expect("Missing DATABASE_URL");
 
     let mut client = Client::builder(&token)
         .event_handler(BobHandler)

@@ -346,9 +346,9 @@ impl MayHaveBeenCreatedByBob for GuildChannel {
 #[derive(Queryable, Insertable)]
 #[table_name="presets"]
 pub struct Preset {
-    guild_id: i64,
-    preset_name: String,
-    preset_data: serde_json::Value,
+    pub guild_id: i64,
+    pub preset_name: String,
+    pub preset_data: serde_json::Value,
 }
 
 
@@ -417,9 +417,26 @@ impl Preset {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PresetData {
-    bitrate: u64,
-    user_limit: Option<u64>,
-    permissions: Vec<PermissionOverwrite>
+    pub bitrate: u64,
+    pub user_limit: Option<u64>,
+    pub permissions: Vec<PermissionOverwrite>
+}
+
+pub trait CanGetPresetData {
+    fn get_preset_data(&self, name: &str) -> BobResult<Option<PresetData>>;
+}
+
+impl CanGetPresetData for GuildId {
+    fn get_preset_data(&self, name: &str) -> BobResult<Option<PresetData>> {
+        let preset = Preset::get_raw(self.0 as i64, name)?;
+        match preset {
+            Some (preset) => Ok(Some(
+                serde_json::from_value::<PresetData>(preset.preset_data)
+                    .bob_catch(ErrorKind::Developer, "Couldn't deserialize PresetData")?
+            )),
+            None => Ok(None),
+        }
+    }
 }
 
 pub trait IntoPresetData {
