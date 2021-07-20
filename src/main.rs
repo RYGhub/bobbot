@@ -60,6 +60,12 @@ impl BobHandler {
                 .kind(ApplicationCommandOptionType::Channel)
                 .name("template")
                 .description("The channel to base the preset on.")
+                .required(true)
+            )
+            .create_option(|o| o
+                .kind(ApplicationCommandOptionType::Boolean)
+                .name("overwrite")
+                .description("If a template with the same name already exists, overwrite it?")
                 .required(false)
             )
         ).await.bob_catch(ErrorKind::Admin, "Couldn't create global command")?;

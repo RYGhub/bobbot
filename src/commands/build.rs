@@ -18,7 +18,7 @@ pub async fn command_build(ctx: &Context, guild_id: &GuildId, channel_id: &Chann
 
     let options = data.to_owned().options.option_hashmap();
     let name = options.req_string("name")?.channelify();
-    let preset = options.opt_string("preset")?;
+    let preset = options.opt_string("preset")?.map(|p| p.channelify());
 
     let created = task_build(
         &ctx, &guild, &name, &member, &category,

@@ -424,12 +424,13 @@ pub struct PresetData {
 
 pub trait IntoPresetData {
     fn preset_data(self) -> BobResult<PresetData>;
+    fn save_as_preset(&self, name: String, overwrite: bool) -> BobResult<DatabaseAction<Preset>>;
 }
 
 impl IntoPresetData for GuildChannel {
     fn preset_data(self) -> BobResult<PresetData> {
         if self.kind != ChannelType::Voice {
-            return Err(BobError::from_msg(ErrorKind::Developer, "Channel is not a voice channel"))
+            return Err(BobError::from_msg(ErrorKind::User, "Channel is not a voice channel"))
         }
 
         Ok(
@@ -440,10 +441,13 @@ impl IntoPresetData for GuildChannel {
             }
         )
     }
-}
 
-
-pub trait MayContainPreset {
-    fn was_created_by_bob(&self) -> BobResult<bool>;
-    fn mark_as_created_by_bob(&self) -> BobResult<CreatedChannel>;
+    fn save_as_preset(&self, name: String, overwrite: bool) -> BobResult<DatabaseAction<Preset>> {
+        Preset::save_raw(
+            i64::from(self.guild_id),
+            name,
+            self.to_owned().preset_data()?,
+            overwrite
+        )
+    }
 }

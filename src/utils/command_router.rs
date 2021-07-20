@@ -3,6 +3,7 @@ use serenity::model::prelude::*;
 use serenity::model::interactions::{Interaction, ApplicationCommandInteractionData};
 use crate::commands::build::command_build;
 use crate::commands::config::{command_config_cc, command_config_dt};
+use crate::commands::save::command_save;
 use crate::errors::{BobCatch, ErrorKind, BobError, BobResult};
 use crate::extensions::ApplicationCommandInteractionDataExtension;
 
@@ -24,7 +25,7 @@ pub async fn handle_command_interaction(ctx: &Context, interaction: &Interaction
 pub async fn route_command_interaction(ctx: &Context, guild_id: &GuildId, channel_id: &ChannelId, member: &Member, data: &ApplicationCommandInteractionData) -> BobResult<String> {
     match data.name.as_str() {
         "build"  => command_build(&ctx, &guild_id, &channel_id, &member, &data).await,
-        "save"   => Ok(String::from("todo")),
+        "save"   => command_save(&ctx, &guild_id, &channel_id, &member, &data).await,
         "config" => route_config(&ctx, &guild_id, &channel_id, &member, &data).await,
         _        => command_invalid().await,
     }
