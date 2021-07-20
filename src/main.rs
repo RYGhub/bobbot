@@ -6,6 +6,7 @@ extern crate pretty_env_logger;
 extern crate dotenv;
 #[macro_use] extern crate log;
 #[macro_use] extern crate diesel;
+#[macro_use] extern crate diesel_migrations;
 
 mod tasks;
 mod checks;
@@ -24,6 +25,10 @@ use crate::extensions::*;
 use crate::tasks::clean::maybe_clean;
 use crate::utils::command_router::{handle_command_interaction};
 use crate::utils::discord_display::DiscordDisplay;
+use crate::database::models::{connect as db_connect, connect};
+
+
+diesel_migrations::embed_migrations!();
 
 
 struct BobHandler;
@@ -187,7 +192,6 @@ impl EventHandler for BobHandler {
     }
 }
 
-
 /// Initialize and start the bot.
 #[tokio::main]
 async fn main() {
@@ -209,12 +213,22 @@ async fn main() {
     let _ = env::var("DATABASE_URL")
         .expect("Missing DATABASE_URL");
 
+    info!("Running migrations...");
+    {
+        let connection = db_connect();
+        embedded_migrations::run(&connection);
+    }
+    info!("Successfully ran all migrations.");
+
+
+    debug!("Building client...");
     let mut client = Client::builder(&token)
         .event_handler(BobHandler)
         .application_id(appid)
         .await
         .expect("Error creating Discord client");
 
+    info!("Starting Discord client!");
     client.start_autosharded()
         .await
         .expect("Error starting Discord client");

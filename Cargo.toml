@@ -64,6 +64,9 @@ features = [
     "serde_json",
 ]
 
+[dependencies.diesel_migrations]
+version = "^1.4.0"
+
 [dependencies.serde_json]
 version = "^1.0.64"
 

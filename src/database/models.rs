@@ -1,9 +1,4 @@
 //! This module contains the database ORM models.
-//!
-//! # Pain and suffering
-//!
-//! It has a **terrible** API and may (should) be rewritten in the future, possibly when I learned more things about
-//! [diesel].
 
 use std::env::{var};
 use std::time::{Duration};
@@ -22,7 +17,7 @@ use crate::database::convert::{BobFrom};
 /// # Panics
 ///
 /// If the `DATABASE_URL` environment variable is not set, or if the database connection fails.
-fn connect() -> PgConnection {
+pub fn connect() -> PgConnection {
     let database_url = var("DATABASE_URL")
         .expect("DATABASE_URL is not set");
 
