@@ -120,13 +120,23 @@ impl EventHandler for BobHandler {
 
         info!("{} is ready!", &ready.user.name);
 
-        /*
-        info!("Registering new commands...");
-        match self.register_commands(&ctx).await {
-            Ok(_) => debug!("Commands registered successfully"),
-            Err(e) => warn!("Failed to register commands: {}", &e),
+        let register_commands = env::var("DISCORD_REGISTER_COMMANDS").map_or_else(
+            || false,
+            |_| true
+        );
+        match register_commands {
+            true => {
+                info!("Registering new commands, DISCORD_REGISTER_COMMANDS is set...");
+                match self.register_commands(&ctx).await {
+                    Ok(_) => debug!("Commands registered successfully"),
+                    Err(e) => warn!("Failed to register commands: {}", &e),
+                }
+                info!("New commands registered, they may take up to an hour to appear.")
+            }
+            false => {
+                info!("Not registering commands, DISCORD_REGISTER_COMMANDS is not set.")
+            }
         }
-        */
 
         match ApplicationCommand::get_global_application_commands(&ctx.http).await {
             Ok(commands) => debug!("Available commands: {:?}", &commands),
