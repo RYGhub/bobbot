@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="https://hub.ryg.one/bluelib/src/targets/royalblue.root.css">
+        <style>
+            body {
+                padding: 0;
+            }
+
+            #main-title {
+                height: 128px;
+
+                display: grid;
+
+                grid-template-areas:
+                    "x avatar title y add z"
+                    "x avatar subtitle y add z"
+                ;
+
+                grid-template-rows: auto auto;
+                grid-template-columns: 1fr 128px auto 12px auto 1fr;
+
+                grid-column-gap: 8px;
+            }
+
+            #main-title .avatar {
+                width: 128px;
+                height: 128px;
+
+                border-radius: 100%;
+
+                grid-area: avatar;
+                justify-self: end;
+                align-self: center;
+            }
+
+            #main-title .title, #main-title .subtitle {
+                margin: 0;
+            }
+
+            #main-title .title {
+                grid-area: title;
+                justify-self: start;
+                align-self: end;
+            }
+
+            #main-title .subtitle {
+                grid-area: subtitle;
+                justify-self: start;
+                align-self: start;
+            }
+
+            #main-title .add {
+                grid-area: add;
+                justify-self: start;
+                align-self: center;
+            }
+
+            a.button {
+                color: black;
+                text-decoration: none;
+            }
+
+            main.main {
+                display: flex;
+                flex-direction: column;
+                max-width: 800px;
+                justify-content: center;
+            }
+
+            footer {
+                font-family: "Arial", sans-serif;
+                font-size: x-small;
+                text-align: center;
+                color: white;
+            }
+        </style>
+        <title>Bob Bot</title>
+    </head>
+    <body class="theme-bluelib">
+        <main class="main">
+            <div id="main-title">
+                <img class="avatar" src="../resources/logo.png" alt=""/>
+                <h1 class="title">
+                    Bob Bot
+                </h1>
+                <h2 class="subtitle">
+                    the channel builder
+                </h2>
+                <div class="add">
+                    <a class="button" href="https://discord.com/api/oauth2/authorize?client_id=737293731459498025&permissions=8&scope=bot%20applications.commands">+ Add</a>
+                </div>
+            </div>
+            <section>
+                <h3>About</h3>
+                <p>
+                    Bob is a Discord bot which allows members of a server to create <b>temporary voice channels</b>, voice channels which are deleted after being empty for a certain period of time.
+                </p>
+            </section>
+            <div class="panel panel-split">
+                <section>
+                    <h3>Use cases</h3>
+                    <p>
+                        With Bob, members of your server will be able to create channels of their own without having the Manage Channels permission:
+                    </p>
+                    <ul>
+                        <li>They will be able to make a channel with a custom title for a specific topic</li>
+                        <li>They will be able to make a channel to talk privately with their friends</li>
+                        <li>They will be able to make a channel where nobody can talk unless allowed</li>
+                        <li>They will be able to make a channel where only specific people can talk</li>
+                        <li>...and so on!</li>
+                    </ul>
+                    <p>
+                        However, the server channel list will stay clean, as these channels will be automatically deleted as soon as they are unused.
+                    </p>
+                </section>
+                <section>
+                    <h3>FAQ</h3>
+                    <blockquote>
+                        <b>Q:</b> Can I store the permissions of a temporary channel and recall them later?
+                    </blockquote>
+                    <p>
+                        Yes! Use the <code>/save</code> Slash Command to create a preset based on the channel you created, then load the preset when you recreate the channel with <code>/build</code>.
+                    </p>
+                    <blockquote>
+                        <b>Q:</b> Why does Bob need Administrator permissions?
+                    </blockquote>
+                    <p>
+                        Discord doesn't allow users to create channels with the Manage Permissions permission unless they also have the Administrator permission.
+                    </p>
+                </section>
+            </div>
+            <section>
+                <h3>Commands list</h3>
+                <table>
+                    <tr>
+                        <td><code>/build {name}</code></td>
+                        <td>Create a new temporary channel</td>
+                    </tr>
+                    <tr>
+                        <td><code>/save {preset} {channel}</code></td>
+                        <td>Save the permissions of a channel to a preset</td>
+                    </tr>
+                    <tr>
+                        <td><code>/build {name} [preset]</code></td>
+                        <td>Create a new temporary channel using the permissions of a preset</td>
+                    </tr>
+                    <tr>
+                        <td><code>/config cc {channel}</code></td>
+                        <td>Set a channel as the notification channel</td>
+                    </tr>
+                    <tr>
+                        <td><code>/config dt {timeout}</code></td>
+                        <td>Select the timeout after which a temporary channel is deleted</td>
+                    </tr>
+                </table>
+            </section>
+            <footer>
+                © <a href="https://github.com/RYGhub">[RYG]</a> <a href="https://steffo.eu/#/">Steffo</a>
+                -
+                <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPL 3.0</a>
+                -
+                <a href="https://github.com/RYGhub/bobbot">GitHub</a>
+            </footer>
+        </main>
+    </body>
+</html>
