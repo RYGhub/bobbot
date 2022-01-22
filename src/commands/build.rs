@@ -1,5 +1,6 @@
 use serenity::prelude::*;
 use serenity::model::prelude::*;
+use tokio::task;
 use crate::extensions::*;
 use crate::errors::*;
 use crate::tasks::build::task_build;
@@ -25,20 +26,7 @@ pub async fn command_build(ctx: &Context, guild_id: &GuildId, channel_id: &Chann
         &preset.as_ref().map(|s| s.as_str())
     ).await?;
 
-    let result = task_move(&ctx, &guild, &member.user.id, &created.id).await
-        .bob_catch(ErrorKind::Admin, "Couldn't move user to temporary voice channel")
-        .map(|_| {
-            format!("🔨 Built temporary voice channel {}!", &created.mention())
-        });
+    let _ = task_move(&ctx, &guild, &member.user.id, &created.id).await;
 
-
-    match result {
-        Ok(v) => Ok(v),
-        Err(e) => {
-            let _ = created.delete(&ctx.http)
-                .await.bob_catch(ErrorKind::Admin, "Couldn't undo channel creation.")?;
-
-            Err(BobError::from_msg(ErrorKind::User, "You're not connected to voice chat!"))
-        }
-    }
+    Ok(format!("🔨 Built temporary voice channel {}!", &created.mention()))
 }

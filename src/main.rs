@@ -16,13 +16,15 @@ mod utils;
 mod extensions;
 mod commands;
 
+use std::collections::HashMap;
 use std::env;
 use serenity::prelude::*;
 use serenity::model::prelude::*;
 use dotenv::{dotenv};
+use serenity::client::bridge::gateway::event::ShardStageUpdateEvent;
 use crate::errors::*;
 use crate::extensions::*;
-use crate::tasks::clean::maybe_clean;
+use crate::tasks::clean::{maybe_clean, task_clean};
 use crate::utils::command_router::{handle_command_interaction};
 use crate::utils::discord_display::DiscordDisplay;
 use crate::database::models::{connect as db_connect, connect};
@@ -151,6 +153,16 @@ impl EventHandler for BobHandler {
         debug!("Received event: voice_state_update");
 
         match maybe_clean(&ctx, &old_vs, &new_vs).await {
+            Err(e) => warn!("{}", e),
+            Ok(_) => {},
+        };
+    }
+
+    /// Called when a new channel is created.
+    async fn channel_create(&self, ctx: Context, channel: &GuildChannel) {
+        debug!("Received event: channel_create");
+
+        match task_clean(&ctx, &channel).await {
             Err(e) => warn!("{}", e),
             Ok(_) => {},
         };
