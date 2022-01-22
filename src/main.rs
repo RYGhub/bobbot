@@ -9,25 +9,23 @@ extern crate dotenv;
 #[macro_use] extern crate diesel_migrations;
 
 mod tasks;
-mod checks;
 mod database;
 mod errors;
 mod utils;
 mod extensions;
 mod commands;
 
-use std::collections::HashMap;
 use std::env;
 use serenity::prelude::*;
 use serenity::model::prelude::*;
 use dotenv::{dotenv};
-use serenity::client::bridge::gateway::event::ShardStageUpdateEvent;
+use serenity::model::interactions::{Interaction};
+use serenity::model::interactions::application_command::{ApplicationCommand, ApplicationCommandOptionType};
 use crate::errors::*;
-use crate::extensions::*;
 use crate::tasks::clean::{maybe_clean, task_clean};
 use crate::utils::command_router::{handle_command_interaction};
 use crate::utils::discord_display::DiscordDisplay;
-use crate::database::models::{connect as db_connect, connect};
+use crate::database::models::{connect as db_connect};
 
 
 diesel_migrations::embed_migrations!();
@@ -120,6 +118,15 @@ impl BobHandler {
 
 #[serenity::async_trait]
 impl EventHandler for BobHandler {
+    /// Called when a new channel is created.
+    async fn channel_create(&self, ctx: Context, channel: &GuildChannel) {
+        debug!("Received event: channel_create");
+
+        match task_clean(&ctx, &channel).await {
+            Err(e) => warn!("{}", e),
+            Ok(_) => {},
+        };
+    }
 
     /// Handle the ready event.
     async fn ready(&self, ctx: Context, ready: Ready) {
@@ -158,47 +165,41 @@ impl EventHandler for BobHandler {
         };
     }
 
-    /// Called when a new channel is created.
-    async fn channel_create(&self, ctx: Context, channel: &GuildChannel) {
-        debug!("Received event: channel_create");
-
-        match task_clean(&ctx, &channel).await {
-            Err(e) => warn!("{}", e),
-            Ok(_) => {},
-        };
-    }
-
     /// Called when a new interaction is started.
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         debug!("Received event: interaction_create | {:?}", &interaction);
 
-        match &interaction.data {
-            None => {
-                if let Err(err) = interaction.pong(&ctx.http).await {
+        match &interaction {
+            /*
+            Interaction::Ping(_) => {
+                let result = interaction.create_interaction_response(&ctx.http, |r| r
+                    .kind(InteractionResponseType::Pong)
+                ).await;
+
+                if let Err(err) = result {
                     warn!("{:?}", &err);
                 }
             },
-            Some(data) => {
-                if let InteractionData::ApplicationCommand(data) = data {
-                    let content = match handle_command_interaction(&ctx, &interaction, &data).await {
-                        Ok(s) => s,
-                        Err(e) => e.to_discord(),
-                    };
+             */
+            Interaction::ApplicationCommand(command) => {
+                let content = match handle_command_interaction(&ctx, &command).await {
+                    Ok(s) => s,
+                    Err(e) => e.to_discord(),
+                };
 
-                    let result = interaction.create_interaction_response(&ctx.http, |r| r
-                        .kind(InteractionResponseType::ChannelMessageWithSource)
-                        .interaction_response_data(|d| d
-                            .content(content)
-                        )
-                    ).await;
+                let result = command.create_interaction_response(&ctx.http, |r| r
+                    .kind(InteractionResponseType::ChannelMessageWithSource)
+                    .interaction_response_data(|d| d
+                        .content(content)
+                    )
+                ).await;
 
-                    if let Err(err) = result {
-                        warn!("{:?}", &err);
-                    }
+                if let Err(err) = result {
+                    warn!("{:?}", &err);
                 }
-                else {
-                    warn!("Received unknown interaction data, ignoring");
-                }
+            },
+            _ => {
+                warn!("Received unknown interaction, ignoring");
             }
         }
     }
@@ -228,7 +229,7 @@ async fn main() {
     info!("Running migrations...");
     {
         let connection = db_connect();
-        embedded_migrations::run(&connection);
+        embedded_migrations::run(&connection).expect("Could not run embedded migrations");
     }
     info!("Successfully ran all migrations.");
 

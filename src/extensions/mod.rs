@@ -2,9 +2,8 @@
 //!
 //! All extension methods are prefixed with `ext_`.
 
-use serenity::prelude::*;
 use serenity::model::prelude::*;
-use serenity::model::interactions::*;
+use serenity::model::interactions::application_command::{ApplicationCommandInteractionDataOption, ApplicationCommandInteractionDataOptionValue};
 use serenity::cache::Cache;
 use serenity::http::Http;
 use std::convert::{TryFrom};
@@ -268,19 +267,4 @@ impl ApplicationCommandInteractionDataHashmapExtension for HashMap<String, Optio
     arg!(req_user,    opt_user,     User,           ApplicationCommandInteractionDataOptionValue::User);
     arg!(req_channel, opt_channel,  PartialChannel, ApplicationCommandInteractionDataOptionValue::Channel);
     arg!(req_role,    opt_role,     Role,           ApplicationCommandInteractionDataOptionValue::Role);
-}
-
-
-#[async_trait]
-pub trait InteractionExtension {
-    async fn pong(&self, http: &Http) -> BobResult<()>;
-}
-
-#[async_trait]
-impl InteractionExtension for Interaction {
-    async fn pong(&self, http: &Http) -> BobResult<()> {
-        self.create_interaction_response(&http, |r| r
-            .kind(InteractionResponseType::Pong)
-        ).await.bob_catch(ErrorKind::Host, "Couldn't reply to ping interaction")
-    }
 }

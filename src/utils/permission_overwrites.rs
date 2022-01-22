@@ -1,10 +1,7 @@
 use serenity::model::prelude::*;
 use serenity::prelude::*;
-use serenity::cache::Cache;
-use serenity::http::Http;
 use crate::errors::*;
-use crate::extensions::*;
-use crate::database::models::{Preset, PresetData};
+use crate::database::models::{PresetData};
 
 
 const ALL_VOICE_PERMISSIONS: u64 = 298845201;

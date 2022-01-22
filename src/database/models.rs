@@ -4,7 +4,7 @@ use std::env::{var};
 use std::time::{Duration};
 use diesel::prelude::*;
 use serenity::model::prelude::{ChannelId, GuildId, GuildChannel, ChannelType};
-use serenity::model::channel::{PermissionOverwrite, PartialChannel};
+use serenity::model::channel::{PermissionOverwrite};
 use serde::{Serialize, Deserialize};
 use serde_json;
 use crate::errors::{BobResult, BobCatch, ErrorKind, BobError};

@@ -1,24 +1,22 @@
 use serenity::prelude::Context;
 use serenity::model::prelude::*;
-use serenity::model::interactions::{Interaction, ApplicationCommandInteractionData};
+use serenity::model::interactions::application_command::{ApplicationCommandInteraction, ApplicationCommandInteractionData};
 use crate::commands::build::command_build;
 use crate::commands::config::{command_config_cc, command_config_dt};
 use crate::commands::save::command_save;
 use crate::errors::{BobCatch, ErrorKind, BobError, BobResult};
-use crate::extensions::ApplicationCommandInteractionDataExtension;
 
 
-pub async fn handle_command_interaction(ctx: &Context, interaction: &Interaction, data: &ApplicationCommandInteractionData) -> BobResult<String> {
+pub async fn handle_command_interaction(ctx: &Context, interaction: &ApplicationCommandInteraction) -> BobResult<String> {
     let guild_id = &interaction.guild_id.as_ref()
         .bob_catch(ErrorKind::Developer, "Interaction has no GuildId")?;
 
-    let channel_id = &interaction.channel_id.as_ref()
-        .bob_catch(ErrorKind::Developer, "Interaction has no ChannelId")?;
+    let channel_id = &interaction.channel_id.as_ref();
 
     let member = &interaction.member.as_ref()
         .bob_catch(ErrorKind::Developer, "Interaction has no member")?;
 
-    route_command_interaction(&ctx, &guild_id, &channel_id, &member, &data).await
+    route_command_interaction(&ctx, &guild_id, &channel_id, &member, &interaction.data).await
 }
 
 

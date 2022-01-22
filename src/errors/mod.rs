@@ -115,9 +115,6 @@ impl DiscordDisplay for BobError {
 /// A [Result] that always returns a [BobError] as [Result::Err].
 pub type BobResult<T> = Result<T, BobError>;
 
-/// A [BobResult] that always returns an empty tuple `()`.
-pub type CheckResult = BobResult<()>;
-
 
 /// A trait denoting that an object can be converted in a [BobResult] with a certain [ErrorKind] and message.
 ///

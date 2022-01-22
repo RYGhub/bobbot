@@ -3,7 +3,7 @@
 use serenity::model::prelude::*;
 use serenity::prelude::*;
 use crate::errors::*;
-use crate::database::models::{MayHaveBeenCreatedByBob, Preset, CanGetPresetData};
+use crate::database::models::{MayHaveBeenCreatedByBob, CanGetPresetData};
 use crate::utils::permission_overwrites::ChannelBuilderPermissionOverwrites;
 
 

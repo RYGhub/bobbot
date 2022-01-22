@@ -1,18 +1,14 @@
 use serenity::prelude::*;
 use serenity::model::prelude::*;
+use serenity::model::interactions::application_command::{ApplicationCommandInteractionData};
 use crate::extensions::*;
 use crate::errors::*;
-use crate::tasks::build::task_build;
-use crate::tasks::mov::task_move;
-use crate::tasks::clean::task_clean;
+use crate::database::models::{IntoPresetData, DatabaseAction};
 use crate::utils::channel_names::{Channelizable};
-use crate::database::models::{IntoPresetData, Preset, DatabaseAction};
 
 
 pub async fn command_save(ctx: &Context, guild_id: &GuildId, _channel_id: &ChannelId, member: &Member, data: &ApplicationCommandInteractionData) -> BobResult<String> {
     debug!("Called command: save");
-
-    let guild = guild_id.ext_partial_guild(&ctx.http).await?;
 
     let options = data.to_owned().options.option_hashmap();
     let preset = options.req_string("preset")?.channelify();
