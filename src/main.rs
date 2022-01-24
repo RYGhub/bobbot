@@ -122,7 +122,14 @@ impl EventHandler for BobHandler {
     async fn channel_create(&self, ctx: Context, channel: &GuildChannel) {
         debug!("Received event: channel_create");
 
-        if !channel.was_created_by_bob() {
+        let check_result = channel.was_created_by_bob();
+        if check_result.is_err() {
+            warn!("Check 'created_by_bob' failed");
+            return;
+        }
+
+        let was_created_by_bob = check_result.unwrap();
+        if !was_created_by_bob {
             return;
         }
 
