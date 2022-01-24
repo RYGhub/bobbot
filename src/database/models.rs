@@ -333,6 +333,7 @@ impl MayHaveBeenCreatedByBob for GuildChannel {
     }
 
     fn mark_as_created_by_bob(&self) -> BobResult<CreatedChannel> {
+        debug!("Marking {} as created by Bob", &self.id);
         CreatedChannel::put_raw(i64::bobfrom(self.guild_id)?, i64::bobfrom(self.id)?)
     }
 }

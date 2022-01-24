@@ -101,7 +101,7 @@ dependencies = [
 
 [[package]]
 name = "bobbot"
-version = "0.10.2"
+version = "0.10.3"
 dependencies = [
  "async-trait",
  "diesel",

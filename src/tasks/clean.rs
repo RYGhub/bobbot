@@ -1,7 +1,7 @@
 //! This module contains a task to clear empty channels.
 
 use std::time::{SystemTime, Duration, UNIX_EPOCH};
-use serenity::model::prelude::{VoiceState, ChannelId, GuildChannel, Mentionable};
+use serenity::model::prelude::{VoiceState, ChannelId, GuildChannel, Mentionable, ChannelType};
 use serenity::prelude::{Context};
 use tokio::time::{sleep};
 use crate::errors::{BobResult, BobCatch, ErrorKind};
@@ -19,7 +19,7 @@ use crate::extensions::*;
 /// - `Ok(Some))` if a channel was deleted.
 /// - `Err(_)` if an error occurred.
 ///
-pub async fn maybe_clean(
+pub async fn maybe_clean_vsc(
     ctx: &Context,
     old_vs: &Option<VoiceState>,
     new_vs: &VoiceState
@@ -41,6 +41,31 @@ pub async fn maybe_clean(
     }
 }
 
+
+pub async fn maybe_clean_oc(
+    ctx: &Context,
+    channel: &GuildChannel,
+)
+    -> BobResult<Option<()>>
+{
+    if channel.kind != ChannelType::Voice {
+        debug!("Not acting, channel kind is not voice");
+        return Ok(None);
+    }
+
+    // FIXME: I love race conditions
+    debug!("Waiting 2 seconds before checking channel state");
+    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+
+    let was_created_by_bob = channel.was_created_by_bob()?;
+    if !was_created_by_bob {
+        debug!("Not acting, channel was not created by bob");
+        return Ok(None);
+    }
+
+    let result = task_clean(&ctx, &channel).await?.map(|_| ());
+    Ok(result)
+}
 
 /// Given two [VoiceState]s, determine if a channel was left and return its [ChannelId].
 async fn get_left_channel_id(old: &Option<VoiceState>, new: &VoiceState) -> Option<ChannelId> {

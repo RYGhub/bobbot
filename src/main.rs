@@ -22,7 +22,7 @@ use dotenv::{dotenv};
 use serenity::model::interactions::{Interaction};
 use serenity::model::interactions::application_command::{ApplicationCommand, ApplicationCommandOptionType};
 use crate::errors::*;
-use crate::tasks::clean::{maybe_clean, task_clean};
+use crate::tasks::clean::{maybe_clean_oc, maybe_clean_vsc, task_clean};
 use crate::utils::command_router::{handle_command_interaction};
 use crate::utils::discord_display::DiscordDisplay;
 use crate::database::models::{connect as db_connect, MayHaveBeenCreatedByBob};
@@ -121,22 +121,10 @@ impl EventHandler for BobHandler {
     /// Called when a new channel is created.
     async fn channel_create(&self, ctx: Context, channel: &GuildChannel) {
         debug!("Received event: channel_create");
-
-        let check_result = channel.was_created_by_bob();
-        if check_result.is_err() {
-            warn!("Check 'created_by_bob' failed");
-            return;
-        }
-
-        let was_created_by_bob = check_result.unwrap();
-        if !was_created_by_bob {
-            return;
-        }
-
-        match task_clean(&ctx, &channel).await {
+        match maybe_clean_oc(&ctx, &channel).await {
             Err(e) => warn!("{}", e),
             Ok(_) => {},
-        };
+        }
     }
 
     /// Handle the ready event.
@@ -170,7 +158,7 @@ impl EventHandler for BobHandler {
     async fn voice_state_update(&self, ctx: Context, _gid: Option<GuildId>, old_vs: Option<VoiceState>, new_vs: VoiceState) {
         debug!("Received event: voice_state_update");
 
-        match maybe_clean(&ctx, &old_vs, &new_vs).await {
+        match maybe_clean_vsc(&ctx, &old_vs, &new_vs).await {
             Err(e) => warn!("{}", e),
             Ok(_) => {},
         };
