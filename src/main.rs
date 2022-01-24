@@ -25,7 +25,7 @@ use crate::errors::*;
 use crate::tasks::clean::{maybe_clean, task_clean};
 use crate::utils::command_router::{handle_command_interaction};
 use crate::utils::discord_display::DiscordDisplay;
-use crate::database::models::{connect as db_connect};
+use crate::database::models::{connect as db_connect, MayHaveBeenCreatedByBob};
 
 
 diesel_migrations::embed_migrations!();
@@ -121,6 +121,10 @@ impl EventHandler for BobHandler {
     /// Called when a new channel is created.
     async fn channel_create(&self, ctx: Context, channel: &GuildChannel) {
         debug!("Received event: channel_create");
+
+        if !channel.was_created_by_bob() {
+            return;
+        }
 
         match task_clean(&ctx, &channel).await {
             Err(e) => warn!("{}", e),
