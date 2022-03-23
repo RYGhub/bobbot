@@ -1,0 +1,25 @@
+version: "2"
+
+volumes:
+  db_data:
+    driver: local
+
+services:
+  db:
+    image: "postgres:14.2"
+    environment:
+      POSTGRES_USER: "bobbot"
+      POSTGRES_PASSWORD: "bobbot"
+      POSTGRES_DB: "bobbot"
+    volumes:
+      - "db_data:/var/lib/postgresql/data"
+    restart: always
+  bot:
+    image: "ghcr.io/ryghub/bobbot:latest"
+    environment:
+      DATABASE_URL: "postgres://bobbot:bobbot@db/bobbot"
+      DISCORD_TOKEN: "..."
+      DISCORD_APPID: "..."
+    depends_on:
+      - "db"
+    restart: always

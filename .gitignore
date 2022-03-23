@@ -1,3 +1,5 @@
 /target
 /presets
 .env
+discord_token.txt
+discord_appid.txt
