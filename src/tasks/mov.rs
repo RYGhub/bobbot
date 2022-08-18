@@ -5,13 +5,13 @@ use serenity::prelude::*;
 use crate::errors::*;
 
 /// Move an [UserId] to a voice [ChannelId].
-pub async fn task_move(ctx: &Context, guild: &PartialGuild, user_id: &UserId, channel_id: &ChannelId) -> BobResult<Member> {
+pub async fn task_move(ctx: &Context, guild: &PartialGuild, user_id: UserId, channel_id: ChannelId) -> BobResult<Member> {
     debug!("Running task: move | In <G:{}>, move <@{}> to <#{}>", &guild.name, &user_id, &channel_id);
 
     guild.move_member(
         &ctx.http,
-        user_id.clone(),
-        channel_id.clone(),
+        user_id,
+        channel_id,
     ).await.map_err(|err| {
         // This is awful
         if format!("{}", &err).contains("Target user is not connected to voice.") {

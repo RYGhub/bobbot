@@ -22,7 +22,7 @@ impl Channelizable for String {
         let s = s.to_ascii_lowercase();
         let s = (*REPLACE_PATTERN).replace_all(&s, " ").into_owned();
         let s = s.trim();
-        let s = s.replace(" ", "-");
+        let s = s.replace(' ', "-");
 
         s
     }

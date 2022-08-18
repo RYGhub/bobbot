@@ -68,7 +68,7 @@ impl CommandChannel {
                 .get_result::<CommandChannel>(&connect())
                 .bob_catch(ErrorKind::External, "Couldn't edit Command Channel information in the database.")?;
 
-            return Ok(DatabaseAction::Updated(result));
+            Ok(DatabaseAction::Updated(result))
         }
         else {
             let cc = CommandChannel {
@@ -81,7 +81,7 @@ impl CommandChannel {
                 .get_result::<CommandChannel>(&connect())
                 .bob_catch(ErrorKind::External, "Couldn't edit Command Channel information in the database.")?;
 
-            return Ok(DatabaseAction::Created(result));
+            Ok(DatabaseAction::Created(result))
         }
     }
 
@@ -118,7 +118,7 @@ pub trait WithCommandChannel {
 
 impl WithCommandChannel for GuildId {
     fn get_command_channel(&self) -> BobResult<Option<ChannelId>> {
-        let gid = i64::bobfrom(self.clone())?;
+        let gid = i64::bobfrom(*self)?;
 
         match CommandChannel::get_raw(gid)? {
             None => Ok(None),
@@ -127,14 +127,14 @@ impl WithCommandChannel for GuildId {
     }
 
     fn set_command_channel(&self, cid: ChannelId) -> BobResult<DatabaseAction<CommandChannel>> {
-        let gid = i64::bobfrom(self.clone())?;
+        let gid = i64::bobfrom(*self)?;
         let cid = i64::bobfrom(cid)?;
 
         CommandChannel::set_raw(gid, cid)
     }
 
     fn unset_command_channel(&self) -> BobResult<DatabaseAction<CommandChannel>> {
-        let gid = i64::bobfrom(self.clone())?;
+        let gid = i64::bobfrom(*self)?;
 
         CommandChannel::unset_raw(gid)
     }
@@ -183,7 +183,7 @@ impl DeletionTime {
                 .get_result::<DeletionTime>(&connect())
                 .bob_catch(ErrorKind::External, "Couldn't edit Deletion Time information in the database.")?;
 
-            return Ok(DatabaseAction::Updated(result));
+            Ok(DatabaseAction::Updated(result))
         }
         else {
             let dt = DeletionTime {
@@ -196,7 +196,7 @@ impl DeletionTime {
                 .get_result::<DeletionTime>(&connect())
                 .bob_catch(ErrorKind::External, "Couldn't edit Deletion Time information in the database.")?;
 
-            return Ok(DatabaseAction::Created(result));
+            Ok(DatabaseAction::Created(result))
         }
     }
 
@@ -233,7 +233,7 @@ pub trait WithDeletionTime {
 
 impl WithDeletionTime for GuildId {
     fn get_deletion_time(&self) -> BobResult<Option<Duration>> {
-        let gid = i64::bobfrom(self.clone())?;
+        let gid = i64::bobfrom(*self)?;
 
         match DeletionTime::get_raw(gid)? {
             None => Ok(None),
@@ -242,14 +242,14 @@ impl WithDeletionTime for GuildId {
     }
 
     fn set_deletion_time(&self, time: Duration) -> BobResult<DatabaseAction<DeletionTime>> {
-        let gid = i64::bobfrom(self.clone())?;
+        let gid = i64::bobfrom(*self)?;
         let time = i32::bobfrom(time)?;
 
         DeletionTime::set_raw(gid, time)
     }
 
     fn unset_deletion_time(&self) -> BobResult<DatabaseAction<DeletionTime>> {
-        let gid = i64::bobfrom(self.clone())?;
+        let gid = i64::bobfrom(*self)?;
 
         DeletionTime::unset_raw(gid)
     }

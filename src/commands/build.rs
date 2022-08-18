@@ -8,7 +8,7 @@ use crate::tasks::mov::task_move;
 use crate::utils::channel_names::{Channelizable};
 
 
-pub async fn command_build(ctx: &Context, guild_id: &GuildId, channel_id: &ChannelId, member: &Member, data: &ApplicationCommandInteractionData) -> BobResult<String> {
+pub async fn command_build(ctx: &Context, guild_id: GuildId, channel_id: ChannelId, member: &Member, data: &ApplicationCommandInteractionData) -> BobResult<String> {
     debug!("Called command: build");
 
     let guild = guild_id.ext_partial_guild(&ctx.http).await?;
@@ -21,11 +21,11 @@ pub async fn command_build(ctx: &Context, guild_id: &GuildId, channel_id: &Chann
     let preset = options.opt_string("preset")?.map(|p| p.channelify());
 
     let created = task_build(
-        &ctx, &guild, &name, &member, &category,
-        &preset.as_ref().map(|s| s.as_str())
+        ctx, &guild, &name, member, &category,
+        &preset.as_deref()
     ).await?;
 
-    let _ = task_move(&ctx, &guild, &member.user.id, &created.id).await;
+    let _ = task_move(ctx, &guild, member.user.id, created.id).await;
 
     Ok(format!("🔨 Built temporary voice channel {}!", &created.mention()))
 }

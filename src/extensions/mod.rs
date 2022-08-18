@@ -125,9 +125,9 @@ impl GuildChannelExtension for GuildChannel {
     }
 
     async fn ext_bitrate(&self) -> BobResult<u32> {
-        match &self.bitrate {
+        match self.bitrate {
             Some(bitrate) => Ok(
-                u32::try_from(bitrate.clone())
+                u32::try_from(bitrate)
                     .bob_catch(ErrorKind::Developer, "Bitrate was somehow larger than a u32")?
             ),
             None => Err(
@@ -137,9 +137,9 @@ impl GuildChannelExtension for GuildChannel {
     }
 
     async fn ext_user_limit(&self) -> BobResult<Option<u32>> {
-        match &self.user_limit {
+        match self.user_limit {
             Some(user_limit) => Ok(Some(
-                u32::try_from(user_limit.clone())
+                u32::try_from(user_limit)
                     .bob_catch(ErrorKind::Developer, "User limit was somehow larger than a u32")?
             )),
             None => Ok(None),
@@ -220,10 +220,7 @@ fn application_command_interaction_data_hashmap_extension_get_optional_arg(
     let arg = hashmap.get(name);
 
     match arg {
-        Some(o) => match o {
-            Some(v) => Some(v.to_owned()),
-            None => None
-        }
+        Some(o) => o.to_owned(),
         None => None
     }
 }

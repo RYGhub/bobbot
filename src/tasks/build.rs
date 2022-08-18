@@ -32,22 +32,22 @@ pub async fn task_build(ctx: &Context, guild: &PartialGuild, name: &str, creator
         &guild.name,
         &name,
         &category.as_ref().map_or_else(|| "<no category>", |ok| ok.name()),
-        &preset.clone().map_or_else(|| format!("<no preset>"), |ok| format!("'{}'", ok))
+        (*preset).map_or_else(|| "<no preset>".to_string(), |ok| format!("'{}'", ok))
     );
 
     let preset = match preset {
         Some(preset) => Some(guild.id.get_preset_data(preset)?.bob_catch(ErrorKind::User, "No such preset.")?),
         None => None
     };
-    let permissions = ChannelBuilderPermissionOverwrites::fetch(&ctx, &creator, &category, preset).await?;
+    let permissions = ChannelBuilderPermissionOverwrites::fetch(ctx, creator, category, preset).await?;
     let bitrate: Option<u32> = None;
     let limit: Option<u32> = None;
 
     let created = guild.create_channel(&ctx.http, |c| {
-        c.name(name.clone());
+        c.name(name);
         c.kind(ChannelType::Voice);
         if let Some(cat) = category {
-            c.category(cat.id.clone());
+            c.category(cat.id);
         }
 
         c.permissions(permissions.merge());

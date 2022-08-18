@@ -26,7 +26,7 @@ pub async fn maybe_clean_vsc(
 )
     -> BobResult<Option<()>>
 {
-    match &get_left_channel_id(&old_vs, &new_vs).await {
+    match get_left_channel_id(old_vs, new_vs).await {
         None => Ok(None),
         Some(c) => {
             let channel = &c.ext_guild_channel(&ctx.http).await?;
@@ -35,7 +35,7 @@ pub async fn maybe_clean_vsc(
                 return Ok(None);
             }
 
-            let result = task_clean(&ctx, &channel).await?.map(|_| ());
+            let result = task_clean(ctx, channel).await?.map(|_| ());
             Ok(result)
         },
     }
@@ -55,7 +55,7 @@ pub async fn maybe_clean_oc(
 
     // FIXME: I love race conditions
     debug!("Waiting 2 seconds before checking channel state");
-    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+    sleep(Duration::from_secs(2)).await;
 
     let was_created_by_bob = channel.was_created_by_bob()?;
     if !was_created_by_bob {
@@ -63,7 +63,7 @@ pub async fn maybe_clean_oc(
         return Ok(None);
     }
 
-    let result = task_clean(&ctx, &channel).await?.map(|_| ());
+    let result = task_clean(ctx, channel).await?.map(|_| ());
     Ok(result)
 }
 
@@ -77,7 +77,7 @@ async fn get_left_channel_id(old: &Option<VoiceState>, new: &VoiceState) -> Opti
         }
     }
 
-    Some(old_channel.clone())
+    Some(old_channel)
 }
 
 
@@ -101,7 +101,7 @@ pub async fn task_clean<'a>(ctx: &'_ Context, channel: &'a GuildChannel) -> BobR
         .bob_catch(ErrorKind::Admin, "No command channel has been set in this Server.")?;
 
     let members_in_channel = channel.ext_members(&ctx.cache).await?;
-    if members_in_channel.len() > 0 {
+    if !members_in_channel.is_empty() {
         return Ok(None);
     }
 
@@ -124,7 +124,7 @@ pub async fn task_clean<'a>(ctx: &'_ Context, channel: &'a GuildChannel) -> BobR
     sleep(countdown).await;
 
     let members_in_channel = channel.ext_members(&ctx.cache).await?;
-    if members_in_channel.len() > 0 {
+    if !members_in_channel.is_empty() {
         return Ok(None);
     }
 

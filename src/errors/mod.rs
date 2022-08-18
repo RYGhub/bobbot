@@ -36,7 +36,7 @@ impl BobError {
     /// Create a new [BobError] given a [ErrorKind] and a message.
     pub fn from_msg(knd: ErrorKind, msg: &str) -> Self {
         BobError {
-            knd: knd,
+            knd,
             msg: Some(String::from(msg)),
             err: None,
         }
@@ -61,7 +61,7 @@ impl BobError {
             },
         }
 
-        msg.reply(&http, format!("{}", &self.to_discord())).await
+        msg.reply(&http, &self.to_discord().to_string()).await
             .bob_catch(ErrorKind::Admin, "Couldn't handle error")
     }
 }
@@ -101,7 +101,7 @@ impl DiscordDisplay for BobError {
         };
 
         let code = match &self.err {
-            None    => format!(""),
+            None    => "".to_string(),
             Some(e) => format!("```\n{}\n```", &e)
         };
 
@@ -127,7 +127,7 @@ pub trait BobCatch<T> {
 impl<T, E: Error + Send + Sync + 'static> BobCatch<T> for Result<T, E> {
     fn bob_catch(self, knd: ErrorKind, msg: &str) -> BobResult<T> {
         self.map_err(|err| BobError {
-            knd: knd,
+            knd,
             err: Some(Box::from(err)),
             msg: Some(String::from(msg))
         })
@@ -138,7 +138,7 @@ impl<T> BobCatch<T> for Option<T> {
     fn bob_catch(self, knd: ErrorKind, msg: &str) -> BobResult<T> {
         self.ok_or_else(||
             BobError {
-                knd: knd,
+                knd,
                 err: None,
                 msg: Some(String::from(msg))
             }

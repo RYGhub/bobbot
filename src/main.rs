@@ -22,10 +22,10 @@ use dotenv::{dotenv};
 use serenity::model::interactions::{Interaction};
 use serenity::model::interactions::application_command::{ApplicationCommand, ApplicationCommandOptionType};
 use crate::errors::*;
-use crate::tasks::clean::{maybe_clean_oc, maybe_clean_vsc, task_clean};
+use crate::tasks::clean::{maybe_clean_oc, maybe_clean_vsc};
 use crate::utils::command_router::{handle_command_interaction};
 use crate::utils::discord_display::DiscordDisplay;
-use crate::database::models::{connect as db_connect, MayHaveBeenCreatedByBob};
+use crate::database::models::{connect as db_connect};
 
 
 diesel_migrations::embed_migrations!();
@@ -121,9 +121,8 @@ impl EventHandler for BobHandler {
     /// Called when a new channel is created.
     async fn channel_create(&self, ctx: Context, channel: &GuildChannel) {
         debug!("Received event: channel_create");
-        match maybe_clean_oc(&ctx, &channel).await {
-            Err(e) => warn!("{}", e),
-            Ok(_) => {},
+        if let Err(e) = maybe_clean_oc(&ctx, channel).await {
+            warn!("{}", e)
         }
     }
 
@@ -158,9 +157,8 @@ impl EventHandler for BobHandler {
     async fn voice_state_update(&self, ctx: Context, _gid: Option<GuildId>, old_vs: Option<VoiceState>, new_vs: VoiceState) {
         debug!("Received event: voice_state_update");
 
-        match maybe_clean_vsc(&ctx, &old_vs, &new_vs).await {
-            Err(e) => warn!("{}", e),
-            Ok(_) => {},
+        if let Err(e) = maybe_clean_vsc(&ctx, &old_vs, &new_vs).await {
+            warn!("{}", e)
         };
     }
 
@@ -181,7 +179,7 @@ impl EventHandler for BobHandler {
             },
              */
             Interaction::ApplicationCommand(command) => {
-                let content = match handle_command_interaction(&ctx, &command).await {
+                let content = match handle_command_interaction(&ctx, command).await {
                     Ok(s) => s,
                     Err(e) => e.to_discord(),
                 };
