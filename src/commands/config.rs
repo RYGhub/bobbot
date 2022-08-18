@@ -1,13 +1,13 @@
 use serenity::prelude::*;
 use serenity::model::prelude::*;
-use serenity::model::interactions::application_command::{ApplicationCommandInteractionDataOption};
+use serenity::model::application::interaction::application_command::CommandDataOption;
 use crate::extensions::*;
 use crate::errors::*;
 use crate::database::models::{WithDeletionTime, WithCommandChannel};
 use std::time::Duration;
 
 
-pub async fn command_config_cc(_ctx: &Context, guild_id: GuildId, _channel_id: ChannelId, member: &Member, data: &Vec<ApplicationCommandInteractionDataOption>) -> BobResult<String> {
+pub async fn command_config_cc(_ctx: &Context, guild_id: GuildId, _channel_id: ChannelId, member: &Member, data: &Vec<CommandDataOption>) -> BobResult<String> {
     debug!("Called command: config cc");
 
     let options = data.to_owned().option_hashmap();
@@ -30,7 +30,7 @@ pub async fn command_config_cc(_ctx: &Context, guild_id: GuildId, _channel_id: C
 }
 
 
-pub async fn command_config_dt(_ctx: &Context, guild_id: GuildId, _channel_id: ChannelId, member: &Member, data: &Vec<ApplicationCommandInteractionDataOption>) -> BobResult<String> {
+pub async fn command_config_dt(_ctx: &Context, guild_id: GuildId, _channel_id: ChannelId, member: &Member, data: &Vec<CommandDataOption>) -> BobResult<String> {
     debug!("Called command: dt");
 
     let options = data.to_owned().option_hashmap();

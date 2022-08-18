@@ -3,7 +3,7 @@
 //! All extension methods are prefixed with `ext_`.
 
 use serenity::model::prelude::*;
-use serenity::model::interactions::application_command::{ApplicationCommandInteractionDataOption, ApplicationCommandInteractionDataOptionValue};
+use serenity::model::application::interaction::application_command::{CommandDataOption, CommandDataOptionValue};
 use serenity::cache::Cache;
 use serenity::http::Http;
 use std::convert::{TryFrom};
@@ -107,7 +107,7 @@ pub trait GuildChannelExtension {
 #[async_trait]
 impl GuildChannelExtension for GuildChannel {
     async fn ext_category(&self, http: &Http) -> BobResult<Option<ChannelCategory>> {
-        match &self.category_id {
+        match &self.parent_id {
             None => {
                 Ok(None)
             },
@@ -162,11 +162,11 @@ impl GuildChannelExtension for GuildChannel {
 
 /// Trait which extends [ApplicationCommandInteractionData].
 pub trait ApplicationCommandInteractionDataExtension {
-    fn option_hashmap(self) -> HashMap<String, Option<ApplicationCommandInteractionDataOptionValue>>;
+    fn option_hashmap(self) -> HashMap<String, Option<CommandDataOptionValue>>;
 }
 
-impl ApplicationCommandInteractionDataExtension for Vec<ApplicationCommandInteractionDataOption> {
-    fn option_hashmap(self) -> HashMap<String, Option<ApplicationCommandInteractionDataOptionValue>> {
+impl ApplicationCommandInteractionDataExtension for Vec<CommandDataOption> {
+    fn option_hashmap(self) -> HashMap<String, Option<CommandDataOptionValue>> {
         self
             .into_iter()
             .map(|option|
@@ -196,10 +196,10 @@ pub trait ApplicationCommandInteractionDataHashmapExtension {
 
 /// Retrieve a required argument from an [HashMap] obtained by [ApplicationCommandInteractionDataExtension.option_hashmap].
 fn application_command_interaction_data_hashmap_extension_get_required_arg(
-    hashmap: &HashMap<String, Option<ApplicationCommandInteractionDataOptionValue>>,
+    hashmap: &HashMap<String, Option<CommandDataOptionValue>>,
     name: &str
 )
-    -> BobResult<ApplicationCommandInteractionDataOptionValue>
+    -> BobResult<CommandDataOptionValue>
 {
     let arg = hashmap.get(name)
         .bob_catch(ErrorKind::User, "Missing argument (in hashmap)")?;
@@ -212,10 +212,10 @@ fn application_command_interaction_data_hashmap_extension_get_required_arg(
 
 /// Retrieve an optional argument from an [HashMap] obtained by [ApplicationCommandInteractionDataExtension.option_hashmap].
 fn application_command_interaction_data_hashmap_extension_get_optional_arg(
-    hashmap: &HashMap<String, Option<ApplicationCommandInteractionDataOptionValue>>,
+    hashmap: &HashMap<String, Option<CommandDataOptionValue>>,
     name: &str
 )
-    -> Option<ApplicationCommandInteractionDataOptionValue>
+    -> Option<CommandDataOptionValue>
 {
     let arg = hashmap.get(name);
 
@@ -257,11 +257,11 @@ macro_rules! arg {
     }
 }
 
-impl ApplicationCommandInteractionDataHashmapExtension for HashMap<String, Option<ApplicationCommandInteractionDataOptionValue>> {
-    arg!(req_string,  opt_string,   String,         ApplicationCommandInteractionDataOptionValue::String);
-    arg!(req_integer, opt_integer,  i64,            ApplicationCommandInteractionDataOptionValue::Integer);
-    arg!(req_boolean, opt_boolean,  bool,           ApplicationCommandInteractionDataOptionValue::Boolean);
-    arg!(req_user,    opt_user,     User,           ApplicationCommandInteractionDataOptionValue::User);
-    arg!(req_channel, opt_channel,  PartialChannel, ApplicationCommandInteractionDataOptionValue::Channel);
-    arg!(req_role,    opt_role,     Role,           ApplicationCommandInteractionDataOptionValue::Role);
+impl ApplicationCommandInteractionDataHashmapExtension for HashMap<String, Option<CommandDataOptionValue>> {
+    arg!(req_string,  opt_string,   String,         CommandDataOptionValue::String);
+    arg!(req_integer, opt_integer,  i64,            CommandDataOptionValue::Integer);
+    arg!(req_boolean, opt_boolean,  bool,           CommandDataOptionValue::Boolean);
+    arg!(req_user,    opt_user,     User,           CommandDataOptionValue::User);
+    arg!(req_channel, opt_channel,  PartialChannel, CommandDataOptionValue::Channel);
+    arg!(req_role,    opt_role,     Role,           CommandDataOptionValue::Role);
 }

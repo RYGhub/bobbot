@@ -1,13 +1,13 @@
 use serenity::prelude::*;
 use serenity::model::prelude::*;
-use serenity::model::interactions::application_command::{ApplicationCommandInteractionData};
+use serenity::model::application::interaction::application_command::{CommandData};
 use crate::extensions::*;
 use crate::errors::*;
 use crate::database::models::{IntoPresetData, DatabaseAction};
 use crate::utils::channel_names::{Channelizable};
 
 
-pub async fn command_save(ctx: &Context, _guild_id: GuildId, _channel_id: ChannelId, member: &Member, data: &ApplicationCommandInteractionData) -> BobResult<String> {
+pub async fn command_save(ctx: &Context, _guild_id: GuildId, _channel_id: ChannelId, member: &Member, data: &CommandData) -> BobResult<String> {
     debug!("Called command: save");
 
     let options = data.to_owned().options.option_hashmap();

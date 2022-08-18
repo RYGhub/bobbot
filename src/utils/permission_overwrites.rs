@@ -82,7 +82,7 @@ impl ChannelBuilderPermissionOverwrites {
 
     /// Create a [ChannelBuilderPermissionOverwrites] by retrieving permission overwrites from some common command structs.
     pub async fn fetch(ctx: &Context, creator: &Member, category: &Option<ChannelCategory>, preset: Option<PresetData>) -> BobResult<Self> {
-        let own_id = ctx.cache.current_user().await.id.to_owned();
+        let own_id = ctx.cache.current_user().id.to_owned();
         let creator_id = creator.user.id.to_owned();
         let category = category.to_owned();
         let preset = preset; // FIXME: This can't be converted into owned for some weird reason?

@@ -1,6 +1,6 @@
 use serenity::prelude::Context;
 use serenity::model::prelude::*;
-use serenity::model::interactions::application_command::{ApplicationCommandInteraction, ApplicationCommandInteractionData};
+use serenity::model::application::interaction::application_command::{ApplicationCommandInteraction, CommandData};
 use crate::commands::build::command_build;
 use crate::commands::config::{command_config_cc, command_config_dt};
 use crate::commands::save::command_save;
@@ -20,7 +20,7 @@ pub async fn handle_command_interaction(ctx: &Context, interaction: &Application
 }
 
 
-pub async fn route_command_interaction(ctx: &Context, guild_id: GuildId, channel_id: ChannelId, member: &Member, data: &ApplicationCommandInteractionData) -> BobResult<String> {
+pub async fn route_command_interaction(ctx: &Context, guild_id: GuildId, channel_id: ChannelId, member: &Member, data: &CommandData) -> BobResult<String> {
     match data.name.as_str() {
         "build"  => command_build(ctx, guild_id, channel_id, member, data).await,
         "save"   => command_save(ctx, guild_id, channel_id, member, data).await,
@@ -30,7 +30,7 @@ pub async fn route_command_interaction(ctx: &Context, guild_id: GuildId, channel
 }
 
 
-pub async fn route_config(ctx: &Context, guild_id: GuildId, channel_id: ChannelId, member: &Member, data: &ApplicationCommandInteractionData) -> BobResult<String> {
+pub async fn route_config(ctx: &Context, guild_id: GuildId, channel_id: ChannelId, member: &Member, data: &CommandData) -> BobResult<String> {
     let option = data.options.get(0)
         .bob_catch(ErrorKind::Developer, "First interaction option isn't SubCommand")?;
 

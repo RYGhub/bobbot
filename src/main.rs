@@ -19,8 +19,8 @@ use std::env;
 use serenity::prelude::*;
 use serenity::model::prelude::*;
 use dotenv::{dotenv};
-use serenity::model::interactions::{Interaction};
-use serenity::model::interactions::application_command::{ApplicationCommand, ApplicationCommandOptionType};
+use serenity::model::application::interaction::{Interaction, InteractionResponseType};
+use serenity::model::application::command::{Command, CommandOptionType};
 use crate::errors::*;
 use crate::tasks::clean::{maybe_clean_oc, maybe_clean_vsc};
 use crate::utils::command_router::{handle_command_interaction};
@@ -35,66 +35,66 @@ struct BobHandler;
 
 impl BobHandler {
     async fn register_commands(&self, ctx: &Context) -> BobResult<()> {
-        ApplicationCommand::create_global_application_command(&ctx.http, |c| c
+        Command::create_global_application_command(&ctx.http, |c| c
             .name("build")
             .description("Build a new temporary channel.")
             .create_option(|o| o
-                .kind(ApplicationCommandOptionType::String)
+                .kind(CommandOptionType::String)
                 .name("name")
                 .description("The name of the channel to build")
                 .required(true)
             )
             .create_option(|o| o
-                .kind(ApplicationCommandOptionType::String)
+                .kind(CommandOptionType::String)
                 .name("preset")
                 .description("The preset to use to create the channel.")
                 .required(false)
             )
         ).await.bob_catch(ErrorKind::Admin, "Couldn't create global command")?;
 
-        ApplicationCommand::create_global_application_command(&ctx.http, |c| c
+        Command::create_global_application_command(&ctx.http, |c| c
             .name("save")
             .description("Save a new preset.")
             .create_option(|o| o
-                .kind(ApplicationCommandOptionType::String)
+                .kind(CommandOptionType::String)
                 .name("preset")
                 .description("The name of the preset to create or overwrite.")
                 .required(true)
             )
             .create_option(|o| o
-                .kind(ApplicationCommandOptionType::Channel)
+                .kind(CommandOptionType::Channel)
                 .name("template")
                 .description("The channel to base the preset on.")
                 .required(true)
             )
             .create_option(|o| o
-                .kind(ApplicationCommandOptionType::Boolean)
+                .kind(CommandOptionType::Boolean)
                 .name("overwrite")
                 .description("If a template with the same name already exists, overwrite it?")
                 .required(false)
             )
         ).await.bob_catch(ErrorKind::Admin, "Couldn't create global command")?;
 
-        ApplicationCommand::create_global_application_command(&ctx.http, |c| c
+        Command::create_global_application_command(&ctx.http, |c| c
             .name("config")
             .description("Configure the bot.")
             .create_option(|o| o
-                .kind(ApplicationCommandOptionType::SubCommand)
+                .kind(CommandOptionType::SubCommand)
                 .name("cc")
                 .description("Set the channel where the bot should send messages in.")
                 .create_sub_option(|so| so
-                    .kind(ApplicationCommandOptionType::Channel)
+                    .kind(CommandOptionType::Channel)
                     .name("channel")
                     .description("The text channel where the bot should send messages in.")
                     .required(true)
                 )
             )
             .create_option(|o| o
-                .kind(ApplicationCommandOptionType::SubCommand)
+                .kind(CommandOptionType::SubCommand)
                 .name("dt")
                 .description("Set the time before channel deletion.")
                 .create_sub_option(|so| so
-                    .kind(ApplicationCommandOptionType::Integer)
+                    .kind(CommandOptionType::Integer)
                     .name("timeout")
                     .description("The time before channel deletion.")
                     .required(true)
@@ -147,14 +147,14 @@ impl EventHandler for BobHandler {
             }
         }
 
-        match ApplicationCommand::get_global_application_commands(&ctx.http).await {
+        match Command::get_global_application_commands(&ctx.http).await {
             Ok(commands) => debug!("Available commands: {:?}", &commands),
             Err(e) => warn!("Failed to get available commands list: {:?}", &e),
         };
     }
 
     /// Called when the voice state of an user changes.
-    async fn voice_state_update(&self, ctx: Context, _gid: Option<GuildId>, old_vs: Option<VoiceState>, new_vs: VoiceState) {
+    async fn voice_state_update(&self, ctx: Context, old_vs: Option<VoiceState>, new_vs: VoiceState) {
         debug!("Received event: voice_state_update");
 
         if let Err(e) = maybe_clean_vsc(&ctx, &old_vs, &new_vs).await {
@@ -232,7 +232,7 @@ async fn main() {
 
 
     debug!("Building client...");
-    let mut client = Client::builder(&token)
+    let mut client = Client::builder(&token, GatewayIntents::GUILDS | GatewayIntents::GUILD_VOICE_STATES)
         .event_handler(BobHandler)
         .application_id(appid)
         .await
