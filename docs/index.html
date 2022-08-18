@@ -74,7 +74,7 @@
                         <p>
                             Yes! Use the <code>/save</code> Slash Command to create a preset based on the channel you created, then load the preset when you recreate the channel with <code>/build</code>.
                         </p>
-                        <blockquote class="panel panel-dialog color-blue">
+                        <blockquote class="panel panel-dialog color-blue" id="faq-perms-admin">
                             Why does Bob need Administrator permissions?
                         </blockquote>
                         <p>
@@ -85,6 +85,12 @@
                         </blockquote>
                         <p>
                             The server has another integration with a <code>/build</code> command registered (possibly the Datamine Updates bot).
+                        </p>
+                        <blockquote class="panel panel-dialog color-blue">
+                            Why does Bob not delete channels it created?
+                        </blockquote>
+                        <p>
+                            Either you have not set a notification channel with <code>/config cc</code>, or it does not have <a href="#faq-perms-admin">the permissions required</a> to delete the channel.
                         </p>
                     </section>
                 </section>
@@ -115,17 +121,22 @@
                         </table>
                     </section>
                 </section>
+                <section class="chapter">
+                    <section class="panel panel-box">
+                        <h3>Source code</h3>
+                        <p>
+                            Bob is free and libre open source software!
+                        </p>
+                        <p>
+                            The source code is currently hosted on GitHub, and <a href="https://github.com/RYGhub/bobbot">can be viewed here</a>!
+                        </p>
+                    </section>
+                </section>
             </main>
         </div>
         <footer>
             <p>
-                © 2022 - <a href="https://steffo.eu">Stefano Pigozzi</a>
-            </p>
-            <p>
-                Developed <a href="https://github.com/RYGhub">by RYG</a>, <a href="https://ryg.one">for RYG</a>
-            </p>
-            <p>
-                Website based (and <span class="color-red">redpilled</span>) on <a href="https://github.com/RYGhub/bluelib">Bluelib</a>
+                © 2022 <a href="https://steffo.eu">Stefano Pigozzi</a> - Developed <a href="https://www.ryg.one">by RYG, for RYG</a> - Licensed under <a href="https://github.com/RYGhub/bobbot/blob/master/LICENSE.txt">the AGPL 3.0 or later</a>
             </p>
         </footer>
     </body>
