@@ -124,7 +124,11 @@ pub async fn task_clean<'a>(ctx: &'_ Context, channel: &'a GuildChannel) -> BobR
     sleep(countdown).await;
 
     let members_in_channel = channel.ext_members(&ctx.cache).await?;
+
     if !members_in_channel.is_empty() {
+        message.delete(&ctx.http)
+            .await.bob_catch(ErrorKind::Admin, "Couldn't delete countdown message.")?;
+
         return Ok(None);
     }
 
@@ -139,7 +143,7 @@ pub async fn task_clean<'a>(ctx: &'_ Context, channel: &'a GuildChannel) -> BobR
                 &channel.name,
             )
         )
-    ).await.bob_catch(ErrorKind::Admin, "Couldn't edit sent message")?;
+    ).await.bob_catch(ErrorKind::Admin, "Couldn't edit sent message.")?;
 
     Ok(Some(channel))
 }
