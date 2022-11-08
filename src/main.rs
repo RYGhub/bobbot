@@ -168,20 +168,28 @@ impl EventHandler for BobHandler {
 
         match &interaction {
             Interaction::ApplicationCommand(command) => {
+                // Respond early, as not all commands may complete in less than 3 seconds
+                let result = command.create_interaction_response(&ctx.http, |r| r
+                    .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+                ).await;
+
+                if let Err(err) = result {
+                    warn!("Could not respond to interaction: {:?}", &err);
+                    return;
+                }
+
                 let content = match handle_command_interaction(&ctx, command).await {
                     Ok(s) => s,
                     Err(e) => e.to_discord(),
                 };
 
-                let result = command.create_interaction_response(&ctx.http, |r| r
-                    .kind(InteractionResponseType::ChannelMessageWithSource)
-                    .interaction_response_data(|d| d
-                        .content(content)
-                    )
+                let result = command.edit_original_interaction_response(&ctx.http, |r| r
+                    .content(content)
                 ).await;
 
                 if let Err(err) = result {
-                    warn!("{:?}", &err);
+                    warn!("Could not update interaction response: {:?}", &err);
+                    return;
                 }
             },
             _ => {
