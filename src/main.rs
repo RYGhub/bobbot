@@ -167,17 +167,6 @@ impl EventHandler for BobHandler {
         debug!("Received event: interaction_create | {:?}", &interaction);
 
         match &interaction {
-            /*
-            Interaction::Ping(_) => {
-                let result = interaction.create_interaction_response(&ctx.http, |r| r
-                    .kind(InteractionResponseType::Pong)
-                ).await;
-
-                if let Err(err) = result {
-                    warn!("{:?}", &err);
-                }
-            },
-             */
             Interaction::ApplicationCommand(command) => {
                 let content = match handle_command_interaction(&ctx, command).await {
                     Ok(s) => s,
