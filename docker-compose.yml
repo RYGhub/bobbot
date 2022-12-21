@@ -5,21 +5,31 @@ volumes:
     driver: local
 
 services:
+  
   db:
     image: "postgres:14.2"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     environment:
+      PGUSER: "bobbot"
+      PGPASSWORD: "bobbot"
+      PGDATABASE: "bobbot"
       POSTGRES_USER: "bobbot"
       POSTGRES_PASSWORD: "bobbot"
       POSTGRES_DB: "bobbot"
     volumes:
-      - "db_data:/var/lib/postgresql/data"
-    restart: always
+      - "db:/var/lib/postgresql/data"
+  
   bot:
     image: "ghcr.io/ryghub/bobbot:latest"
     environment:
       DATABASE_URL: "postgres://bobbot:bobbot@db/bobbot"
-      DISCORD_TOKEN: "..."
-      DISCORD_APPID: "..."
+      DISCORD_TOKEN: "$DISCORD_TOKEN"
+      DISCORD_APPID: "$DISCORD_APPID"
+    restart: unless-stopped
     depends_on:
       - "db"
-    restart: always
