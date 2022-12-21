@@ -5,7 +5,6 @@ volumes:
     driver: local
 
 services:
-  
   db:
     image: "postgres:14.2"
     restart: unless-stopped
@@ -22,7 +21,7 @@ services:
       POSTGRES_PASSWORD: "bobbot"
       POSTGRES_DB: "bobbot"
     volumes:
-      - "db:/var/lib/postgresql/data"
+      - "db_data:/var/lib/postgresql/data"
   
   bot:
     image: "ghcr.io/ryghub/bobbot:latest"
