@@ -5,9 +5,9 @@ COPY . .
 FROM files AS install
 RUN cargo install --path .
 
-FROM install AS environment
-ENV RUST_LOG="bobbot"
-
 FROM environment AS entrypoint
+ENV RUST_LOG="bobbot"
 ENTRYPOINT [ "bobbot" ]
 CMD []
+
+FROM entrypoint AS final
