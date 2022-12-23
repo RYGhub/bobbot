@@ -1,4 +1,6 @@
-version: "2"
+# To be used in Portainer
+
+version: "3.9"
 
 volumes:
   db_data:
@@ -13,6 +15,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    env_file:
+      - "stack.env"
     environment:
       PGUSER: "bobbot"
       PGPASSWORD: "bobbot"
@@ -25,10 +29,10 @@ services:
   
   bot:
     image: "ghcr.io/ryghub/bobbot:latest"
-    environment:
-      DATABASE_URL: "postgres://bobbot:bobbot@db/bobbot"
-      DISCORD_TOKEN: "$DISCORD_TOKEN"
-      DISCORD_APPID: "$DISCORD_APPID"
     restart: unless-stopped
     depends_on:
-      - "db"
+      - db
+    env_file:
+      - "stack.env"
+    environment:
+      DATABASE_URL: "postgres://bobbot:bobbot@db/bobbot"
