@@ -1,0 +1,30 @@
+name: "Test suite"
+
+on:
+  # Modification of a project file in the main branch
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "diesel.toml"
+  # Pull request to the main branch modifying a project file
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "diesel.toml"
+  # Triggered by a new release
+  workflow_call:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    uses: Steffo99/.github/.github/workflows/test-cargo-check.yml@main
