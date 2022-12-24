@@ -29,7 +29,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: "128M"
+          memory: "64M"
   
   bot:
     image: "ghcr.io/ryghub/bobbot:latest"
