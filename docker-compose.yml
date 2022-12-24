@@ -26,6 +26,10 @@ services:
       POSTGRES_DB: "bobbot"
     volumes:
       - "db_data:/var/lib/postgresql/data"
+    deploy:
+      resources:
+        limits:
+          memory: "128M"
   
   bot:
     image: "ghcr.io/ryghub/bobbot:latest"
@@ -36,3 +40,7 @@ services:
       - "stack.env"
     environment:
       DATABASE_URL: "postgres://bobbot:bobbot@db/bobbot"
+    deploy:
+      resources:
+        limits:
+          memory: "32M"
