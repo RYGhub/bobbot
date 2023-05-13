@@ -3,7 +3,8 @@ ARG BUILDPLATFORM
 ARG TARGETPLATFORM
 
 RUN apt-get update && \
-    apt-get upgrade --assume-yes
+    apt-get upgrade --assume-yes && \
+    apt-get install --assume-yes libpq5 libpq-dev
 
 RUN \
     mkdir .cargo && \
@@ -61,6 +62,10 @@ RUN \
 #############################################################################
 
 FROM --platform=${TARGETPLATFORM} rust:1.69-slim-bullseye AS final
+
+RUN apt-get update && \
+    apt-get upgrade --assume-yes && \
+    apt-get install libpq5
 
 WORKDIR /usr/src/bobbot/
 COPY --from=builder \
