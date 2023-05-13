@@ -1,7 +1,7 @@
 //! This module contains a task to clear empty channels.
 
 use std::time::{SystemTime, Duration, UNIX_EPOCH};
-use serenity::model::prelude::{VoiceState, ChannelId, GuildChannel, Mentionable, ChannelType};
+use serenity::model::prelude::{VoiceState, ChannelId, GuildChannel, Mentionable};
 use serenity::prelude::{Context};
 use tokio::time::{sleep};
 use crate::errors::{BobResult, BobCatch, ErrorKind};
@@ -48,11 +48,6 @@ pub async fn maybe_clean_oc(
 )
     -> BobResult<Option<()>>
 {
-    if channel.kind != ChannelType::Voice {
-        debug!("Not acting, channel kind is not voice");
-        return Ok(None);
-    }
-
     // FIXME: I love race conditions
     debug!("Waiting 2 seconds before checking channel state");
     sleep(Duration::from_secs(2)).await;

@@ -19,9 +19,19 @@ pub async fn command_build(ctx: &Context, guild_id: GuildId, channel_id: Channel
     let options = data.to_owned().options.option_hashmap();
     let name = options.req_string("name")?.channelify();
     let preset = options.opt_string("preset")?.map(|p| p.channelify());
+    let kind = match options.opt_string("kind")? {
+        Some(s) => match s.as_str() {
+            "Voice" => ChannelType::Voice,
+            "Stage" => ChannelType::Stage,
+            _ => return Err(
+                BobError { knd: ErrorKind::Developer, msg: Some("Invalid channel kind.".to_string()), err: None }
+            )
+        }
+        None => ChannelType::Voice,
+    };
 
     let created = task_build(
-        ctx, &guild, &name, member, &category,
+        ctx, &guild, &name, kind, member, &category,
         &preset.as_deref()
     ).await?;
 

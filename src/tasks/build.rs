@@ -26,7 +26,7 @@ use crate::utils::permission_overwrites::ChannelBuilderPermissionOverwrites;
 ///
 /// Presets aren't loaded yet.
 ///
-pub async fn task_build(ctx: &Context, guild: &PartialGuild, name: &str, creator: &Member, category: &Option<ChannelCategory>, preset: &Option<&str>) -> BobResult<GuildChannel> {
+pub async fn task_build(ctx: &Context, guild: &PartialGuild, name: &str, kind: ChannelType, creator: &Member, category: &Option<ChannelCategory>, preset: &Option<&str>) -> BobResult<GuildChannel> {
     debug!(
         "Running task: build | In <G:{}>, build #{} in <C:{}> with preset {}",
         &guild.name,
@@ -43,9 +43,18 @@ pub async fn task_build(ctx: &Context, guild: &PartialGuild, name: &str, creator
     let bitrate: Option<u32> = None;
     let limit: Option<u32> = None;
 
+    match kind {
+        ChannelType::Voice | ChannelType::Stage => {}
+        _ => {
+            return Err(
+                BobError { knd: ErrorKind::Developer, msg: Some("Invalid channel kind.".to_string()), err: None }
+            )
+        }
+    }
+
     let created = guild.create_channel(&ctx.http, |c| {
         c.name(name);
-        c.kind(ChannelType::Voice);
+        c.kind(kind);
         if let Some(cat) = category {
             c.category(cat.id);
         }

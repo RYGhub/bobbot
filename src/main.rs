@@ -50,6 +50,14 @@ impl BobHandler {
                 .description("The preset to use to create the channel.")
                 .required(false)
             )
+            .create_option(|o| o
+                .kind(CommandOptionType::String)
+                .name("kind")
+                .description("The type of channel to create.")
+                .required(false)
+                .add_string_choice("Voice", "Voice")
+                .add_string_choice("Stage", "Stage")
+            )
         ).await.bob_catch(ErrorKind::Admin, "Couldn't create global command")?;
 
         Command::create_global_application_command(&ctx.http, |c| c
