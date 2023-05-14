@@ -67,7 +67,7 @@ RUN \
 FROM --platform=${TARGETPLATFORM} rust:1.69-slim-bullseye AS final
 
 RUN apt-get update && \
-    apt-get upgrade && \
+    apt-get upgrade --assume-yes && \
     apt-get install --assume-yes libpq5
 
 WORKDIR /usr/src/bobbot/
