@@ -13,19 +13,22 @@ RUN \
     echo >> .cargo/config.toml && \
     if [ "${BUILDPLATFORM}" != "${TARGETPLATFORM}" ]; then \
         if [ "${TARGETPLATFORM}" = "linux/amd64" ]; then \
-            apt-get install --assume-yes gcc-x86-64-linux-gnu; \
+            dpkg --add-architecture amd64; \
+            apt-get install --assume-yes gcc-x86-64-linux-gnu libpq5:amd64 libpq-dev:amd64; \
             echo '[target.x86_64-unknown-linux-gnu]' >> .cargo/config.toml; \
             echo 'linker = "x86-64-linux-gnu-gcc"' >> .cargo/config.toml; \
             echo >> .cargo/config.toml; \
         fi && \
         if [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
-            apt-get install --assume-yes gcc-aarch64-linux-gnu; \
+            dpkg --add-architecture arm64; \
+            apt-get install --assume-yes gcc-aarch64-linux-gnu libpq5:arm64 libpq-dev:arm64; \
             echo '[target.aarch64-unknown-linux-gnu]' >> .cargo/config.toml; \
             echo 'linker = "aarch64-linux-gnu-gcc"' >> .cargo/config.toml; \
             echo >> .cargo/config.toml; \
         fi && \
         if [ "${TARGETPLATFORM}" = "linux/arm/v7" ]; then \
-            apt-get install --assume-yes gcc-arm-linux-gnueabihf; \
+            dpkg --add-architecture armhf; \
+            apt-get install --assume-yes gcc-arm-linux-gnueabihf libpq5:armhf libpq-dev:armhf; \
             echo '[target.armv7-unknown-linux-gnueabihf]' >> .cargo/config.toml; \
             echo 'linker = "arm-linux-gnueabihf-gcc"' >> .cargo/config.toml; \
             echo >> .cargo/config.toml; \
@@ -64,8 +67,8 @@ RUN \
 FROM --platform=${TARGETPLATFORM} rust:1.69-slim-bullseye AS final
 
 RUN apt-get update && \
-    apt-get upgrade --assume-yes && \
-    apt-get install --assume-yes libpq5
+    apt-get upgrade && \
+    apt-get install libpq5
 
 WORKDIR /usr/src/bobbot/
 COPY --from=builder \
