@@ -7,9 +7,6 @@ on:
       - "v*"
 
 jobs:
-  test:
-    uses: ./.github/workflows/test.yml
-
   ghcrio:
     uses: Steffo99/.github/.github/workflows/buildrelease-docker.yml@main
     needs:
