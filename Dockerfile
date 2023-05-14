@@ -53,12 +53,18 @@ COPY ./ ./
 RUN \
     if [ "${TARGETPLATFORM}" = "linux/amd64" ]; then \
         RUSTTARGET=x86_64-unknown-linux-gnu; \
+        export TARGET_CC=/usr/bin/aarch64-unknown-linux-gnu-gcc; \
+        export TARGET_AR=/usr/bin/aarch64-unknown-linux-gnu-ar; \
     fi && \
     if [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
         RUSTTARGET=aarch64-unknown-linux-gnu; \
+        export TARGET_CC=/usr/bin/aarch64-unknown-linux-gnu-gcc; \
+        export TARGET_AR=/usr/bin/aarch64-unknown-linux-gnu-ar; \
     fi && \
     if [ "${TARGETPLATFORM}" = "linux/arm/v7" ]; then \
         RUSTTARGET=armv7-unknown-linux-gnueabihf; \
+        export TARGET_CC=/usr/bin/aarch64-unknown-linux-gnu-gcc; \
+        export TARGET_AR=/usr/bin/aarch64-unknown-linux-gnu-ar; \
     fi && \
     cargo build --all-features --bins --release --target=${RUSTTARGET}
 
