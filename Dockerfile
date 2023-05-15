@@ -2,6 +2,8 @@ FROM --platform=${BUILDPLATFORM} rust:1.69-bullseye AS builder
 ARG BUILDPLATFORM
 ARG TARGETPLATFORM
 
+WORKDIR /usr/src/bobbot/
+
 RUN apt-get update && \
     apt-get upgrade --assume-yes && \
     apt-get install --assume-yes libpq5 libpq-dev
@@ -14,6 +16,7 @@ RUN \
     if [ "${BUILDPLATFORM}" != "${TARGETPLATFORM}" ]; then \
         if [ "${TARGETPLATFORM}" = "linux/amd64" ]; then \
             dpkg --add-architecture amd64; \
+            apt-get update; \
             apt-get install --assume-yes gcc-x86-64-linux-gnu libpq5:amd64 libpq-dev:amd64; \
             echo '[target.x86_64-unknown-linux-gnu]' >> .cargo/config.toml; \
             echo 'linker = "x86-64-linux-gnu-gcc"' >> .cargo/config.toml; \
@@ -21,6 +24,7 @@ RUN \
         fi && \
         if [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
             dpkg --add-architecture arm64; \
+            apt-get update; \
             apt-get install --assume-yes gcc-aarch64-linux-gnu libpq5:arm64 libpq-dev:arm64; \
             echo '[target.aarch64-unknown-linux-gnu]' >> .cargo/config.toml; \
             echo 'linker = "aarch64-linux-gnu-gcc"' >> .cargo/config.toml; \
@@ -28,6 +32,7 @@ RUN \
         fi && \
         if [ "${TARGETPLATFORM}" = "linux/arm/v7" ]; then \
             dpkg --add-architecture armhf; \
+            apt-get update; \
             apt-get install --assume-yes gcc-arm-linux-gnueabihf libpq5:armhf libpq-dev:armhf; \
             echo '[target.armv7-unknown-linux-gnueabihf]' >> .cargo/config.toml; \
             echo 'linker = "arm-linux-gnueabihf-gcc"' >> .cargo/config.toml; \
@@ -47,14 +52,13 @@ RUN \
     fi && \
     rustup target add ${RUSTTARGET}
 
-WORKDIR /usr/src/bobbot/
 COPY ./ ./
 
 RUN \
     if [ "${TARGETPLATFORM}" = "linux/amd64" ]; then \
         RUSTTARGET=x86_64-unknown-linux-gnu; \
-        export TARGET_CC=/usr/bin/aarch64-linux-gnu-gcc; \
-        export TARGET_AR=/usr/bin/aarch64-linux-gnu-ar; \
+        export TARGET_CC=/usr/bin/x86-64-linux-gnu-gcc; \
+        export TARGET_AR=/usr/bin/x86-64-linux-gnu-ar; \
     fi && \
     if [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
         RUSTTARGET=aarch64-unknown-linux-gnu; \
@@ -63,8 +67,8 @@ RUN \
     fi && \
     if [ "${TARGETPLATFORM}" = "linux/arm/v7" ]; then \
         RUSTTARGET=armv7-unknown-linux-gnueabihf; \
-        export TARGET_CC=/usr/bin/aarch64-linux-gnu-gcc; \
-        export TARGET_AR=/usr/bin/aarch64-linux-gnu-ar; \
+        export TARGET_CC=/usr/bin/arm-linux-gnueabihf-gcc; \
+        export TARGET_AR=/usr/bin/arm-linux-gnueabihf-ar; \
     fi && \
     cargo build --all-features --bins --release --target=${RUSTTARGET}
 
